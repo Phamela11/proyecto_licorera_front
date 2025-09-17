@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import AuthLayout from '@/layouts/AuthLayout';
 import PrivateLayout from '@/layouts/PrivateLayout';
+import Dashboard from '@/pages/backoffice/dashboard/dashboard';
 
 // Lazy loading para optimizar el rendimiento
 //auth views
@@ -36,6 +37,11 @@ export const appRoutes: RouteObject[] = [
     path: '/',
     element: <PrivateLayout />,
     children: [
+      {
+        index: true,
+        path: 'dashboard',
+        element: <Dashboard />
+      },
       {
         index: true,
         path: 'usuarios',

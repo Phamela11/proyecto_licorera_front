@@ -3,7 +3,8 @@ import {
     CreditCard, 
     Users, 
     UserCheck, 
-    Wallet 
+    Wallet,
+    Home
   } from "lucide-react";
   
   export interface Module {
@@ -18,34 +19,41 @@ import {
   export const modules: Module[] = [
     {
       id: 1,
+      name: 'Dashboard',
+      path: '/dashboard',
+      icon: Home,
+      roles: ['admin']
+    },
+    {
+      id: 2,
       name: 'Usuarios',
       path: '/usuarios',
       icon: Users,
       roles: ['admin']
     },
     {
-      id: 2,
+      id: 3,
       name: 'Empleados',
       path: '/empleados',
       icon: UserCheck,
       roles: ['admin']
     },
     {
-      id: 3,
+      id: 4,
       name: 'Membresías',
       path: '/membresias',
       icon: CreditCard,
       roles: ['admin']
     },
     {
-      id: 4,
+      id: 5,
       name: 'Caja',
       path: '/caja',
       icon: Wallet,
       roles: ['admin']
     },
     {
-      id: 5,
+      id: 6,
       name: 'Reportes',
       path: '/reportes',
       icon: ChartBar,

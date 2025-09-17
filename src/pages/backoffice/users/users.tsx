@@ -1,4 +1,3 @@
-import { useState, useMemo } from "react";
 import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,114 +10,43 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import TableGlobal, { type TableColumn } from "@/components/ui/tableGlobal";
-import { toast } from "sonner";
-
+import useUsers from "./useUsers";
+import type { User } from "./useUsers";
 // Interfaz para el usuario
-interface User {
-  id: number;
-  nombre: string;
-  email: string;
-  rol: string;
-  estado: "activo" | "inactivo";
-  fechaCreacion: string;
-}
-
-// Datos de ejemplo
-const initialUsers: User[] = [
-  {
-    id: 1,
-    nombre: "Juan Pérez",
-    email: "juan.perez@email.com",
-    rol: "Administrador",
-    estado: "activo",
-    fechaCreacion: "2024-01-15",
-  },
-  {
-    id: 2,
-    nombre: "María García",
-    email: "maria.garcia@email.com",
-    rol: "Vendedor",
-    estado: "activo",
-    fechaCreacion: "2024-02-20",
-  },
-  {
-    id: 3,
-    nombre: "Carlos López",
-    email: "carlos.lopez@email.com",
-    rol: "Cajero",
-    estado: "inactivo",
-    fechaCreacion: "2024-03-10",
-  },
-];
 
 const Users = () => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newUser, setNewUser] = useState({
-    nombre: "",
-    email: "",
-    rol: "",
-    estado: "activo" as "activo" | "inactivo",
-  });
-
-  // Filtrar usuarios por término de búsqueda
-  const filteredUsers = useMemo(() => {
-    return users.filter(
-      (user) =>
-        user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.rol.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [users, searchTerm]);
-
-  // Crear nuevo usuario
-  const handleCreateUser = () => {
-    if (!newUser.nombre || !newUser.email || !newUser.rol) {
-      toast.error("Por favor, completa todos los campos obligatorios");
-      return;
-    }
-
-    const user: User = {
-      id: Date.now(),
-      ...newUser,
-      fechaCreacion: new Date().toISOString().split("T")[0],
-    };
-
-    setUsers([...users, user]);
-    setNewUser({
-      nombre: "",
-      email: "",
-      rol: "",
-      estado: "activo",
-    });
-    setIsModalOpen(false);
-    toast.success("Usuario creado exitosamente");
-  };
-
-  // Eliminar usuario
-  const handleDeleteUser = (id: number) => {
-    setUsers(users.filter((user) => user.id !== id));
-    toast.success("Usuario eliminado exitosamente");
-  };
-
-  // Cambiar estado del usuario
-  const toggleUserStatus = (id: number) => {
-    setUsers(
-      users.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              estado: user.estado === "activo" ? "inactivo" : "activo",
-            }
-          : user
-      )
-    );
-    toast.success("Estado del usuario actualizado");
-  };
+  const { 
+    users, 
+    filteredUsers, 
+    isModalOpen, 
+    isEditMode,
+    isDeleteDialogOpen,
+    userToDelete,
+    newUser, 
+    setIsModalOpen, 
+    openCreateModal,
+    openEditModal,
+    openDeleteDialog,
+    confirmDeleteUser,
+    cancelDeleteUser,
+    onSubmit, 
+    searchTerm,
+    setSearchTerm,
+    register,
+    handleSubmitForm
+  } = useUsers();
 
   // Configuración de columnas para TableGlobal
   const userColumns: TableColumn<User>[] = [
@@ -133,29 +61,26 @@ const Users = () => {
       width: "250px",
     },
     {
+      key: "telefono",
+      title: "Teléfono",
+      align: "center",
+      width: "150px",
+    },
+    {
       key: "rol",
       title: "Rol",
       align: "center",
-    },
-    {
-      key: "estado",
-      title: "Estado",
-      align: "center",
-      render: (estado: "activo" | "inactivo") => (
+      render: (rol: string) => (
         <Badge
-          variant={estado === "activo" ? "default" : "secondary"}
-          className={
-            estado === "activo"
-              ? "bg-green-100 text-green-800 hover:bg-green-200"
-              : "bg-red-100 text-red-800 hover:bg-red-200"
-          }
+          variant="outline"
+          className="bg-blue-100 text-blue-800 hover:bg-blue-200"
         >
-          {estado}
+          {rol === "ADMINISTRADOR" ? "Admin" : rol === "EMPLEADO" ? "Empleado" : rol}
         </Badge>
       ),
     },
     {
-      key: "fechaCreacion",
+      key: "fecha_creacion",
       title: "Fecha de Creación",
       align: "center",
     },
@@ -168,15 +93,15 @@ const Users = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => toggleUserStatus(record.id)}
-            title={record.estado === "activo" ? "Desactivar" : "Activar"}
+            onClick={() => openEditModal(record)}
+            title="Editar usuario"
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDeleteUser(record.id)}
+            onClick={() => openDeleteDialog(record)}
             className="text-red-600 hover:text-red-700"
             title="Eliminar usuario"
           >
@@ -197,18 +122,22 @@ const Users = () => {
             Gestiona los usuarios del sistema
           </p>
         </div>
+        <Button onClick={openCreateModal}>
+          <Plus className="mr-2 h-4 w-4" />
+          Crear Usuario
+        </Button>
+        
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Crear Usuario
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+              <DialogTitle>
+                {isEditMode ? "Editar Usuario" : "Crear Nuevo Usuario"}
+              </DialogTitle>
               <DialogDescription>
-                Completa los datos para crear un nuevo usuario en el sistema.
+                {isEditMode 
+                  ? "Modifica los datos del usuario seleccionado."
+                  : "Completa los datos para crear un nuevo usuario en el sistema."
+                }
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -216,10 +145,8 @@ const Users = () => {
                 <Label htmlFor="nombre">Nombre completo *</Label>
                 <Input
                   id="nombre"
-                  value={newUser.nombre}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, nombre: e.target.value })
-                  }
+                  defaultValue={newUser.nombre}
+                  {...register('nombre')}
                   placeholder="Ingresa el nombre completo"
                 />
               </div>
@@ -228,46 +155,45 @@ const Users = () => {
                 <Input
                   id="email"
                   type="email"
-                  value={newUser.email}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, email: e.target.value })
-                  }
+                  defaultValue={newUser.email || ""}
+                  {...register('email')}
                   placeholder="usuario@email.com"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="telefono">Teléfono *</Label>
+                <Input
+                  id="telefono"
+                  type="tel"
+                  defaultValue={newUser.telefono || ""}
+                  {...register('telefono')}
+                  placeholder="1234567890"
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="rol">Rol *</Label>
                 <select
                   id="rol"
-                  value={newUser.rol}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, rol: e.target.value })
-                  }
+                  defaultValue={newUser.rol}
+                  {...register('rol')}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">Selecciona un rol</option>
-                  <option value="Administrador">Administrador</option>
-                  <option value="Vendedor">Vendedor</option>
-                  <option value="Cajero">Cajero</option>
-                  <option value="Inventario">Inventario</option>
+                  <option value="ADMINISTRADOR">Administrador</option>
+                  <option value="EMPLEADO">Vendedor</option>
                 </select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="estado">Estado</Label>
-                <select
-                  id="estado"
-                  value={newUser.estado}
-                  onChange={(e) =>
-                    setNewUser({
-                      ...newUser,
-                      estado: e.target.value as "activo" | "inactivo",
-                    })
-                  }
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                </select>
+                <Label htmlFor="contrasena">
+                  Contraseña {isEditMode ? "(opcional - dejar vacío para mantener actual)" : "*"}
+                </Label>
+                <Input
+                  id="contrasena"
+                  type="password"
+                  defaultValue={newUser.contrasena || ""}
+                  {...register('contrasena')}
+                  placeholder={isEditMode ? "Dejar vacío para mantener contraseña actual" : "Ingresa la contraseña"}
+                />
               </div>
             </div>
             <DialogFooter>
@@ -278,7 +204,9 @@ const Users = () => {
               >
                 Cancelar
               </Button>
-              <Button onClick={handleCreateUser}>Crear Usuario</Button>
+              <Button onClick={handleSubmitForm(onSubmit)}>
+                {isEditMode ? "Actualizar Usuario" : "Crear Usuario"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -322,10 +250,34 @@ const Users = () => {
           {searchTerm && ` | Filtrados: ${filteredUsers.length}`}
         </div>
         <div>
-          Activos: {users.filter((u) => u.estado === "activo").length} |
-          Inactivos: {users.filter((u) => u.estado === "inactivo").length}
+          Administradores: {users.filter((u) => u.rol === "ADMINISTRADOR").length} |
+          Empleados: {users.filter((u) => u.rol === "EMPLEADO").length}
         </div>
       </div>
+
+      {/* Modal de confirmación para eliminar */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={cancelDeleteUser}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el usuario{" "}
+              <strong>{userToDelete?.nombre}</strong> del sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDeleteUser}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
