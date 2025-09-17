@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { login } from "@/core/services/auth.service";
+import { toast } from "sonner";
 
 const useLogin = () => {    
 
@@ -13,12 +15,14 @@ const useLogin = () => {
     } = useForm();
     
   
-    const onSubmit = (data: any) => {
+    const onSubmit = async (data: any) => {
         try {
             console.log(data);
+            //const response = await login(data.email, data.password);
+            //console.log(response);
             navigate('/');
         } catch (error) {
-            console.log(error);
+            toast.error((error as any).response.data.message);
         }
     };
   

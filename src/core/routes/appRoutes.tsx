@@ -8,7 +8,7 @@ import PrivateLayout from '@/layouts/PrivateLayout';
 const Register = lazy(() => import('@/pages/auth/view/register'));
 const Login = lazy(() => import('@/pages/auth/view/Login'));
 //backoffice views
-const Home = lazy(() => import('@/pages/backoffice/Home'));
+const Users = lazy(() => import('@/pages/backoffice/users/users'));
 //backoffice views
 const Productos = lazy(() => import('@/pages/Productos'));
 const Categorias = lazy(() => import('@/pages/Categorias'));
@@ -20,6 +20,7 @@ export const appRoutes: RouteObject[] = [
     element: <AuthLayout />,
     children: [
       {
+        index: true,
         path: 'login',
         element: <Login />
       },
@@ -37,7 +38,8 @@ export const appRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <Home />
+        path: 'usuarios',
+        element: <Users />
       },
       {
         path: 'productos',

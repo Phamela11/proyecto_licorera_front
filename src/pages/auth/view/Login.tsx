@@ -71,12 +71,6 @@ export default function Login() {
                 />
                 <span className="ml-2 text-sm text-gray-600">Recordarme</span>
               </label>
-              <Link
-                to="/forgot-password"
-                className="text-sm text-purple-600 hover:text-purple-500 font-medium"
-              >
-                ¿Olvidaste tu contraseña?
-              </Link>
             </div>
 
             <button
