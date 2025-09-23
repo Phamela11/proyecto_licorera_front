@@ -2,9 +2,12 @@ import {
     ChartBar, 
     CreditCard, 
     Users, 
-    UserCheck, 
     Wallet,
-    Home
+    Home,
+    DollarSign,
+    Settings,
+    UserCircle,
+    ShoppingCart
   } from "lucide-react";
   
   export interface Module {
@@ -26,37 +29,58 @@ import {
     },
     {
       id: 2,
-      name: 'Usuarios',
+      name: 'Empleado',
       path: '/usuarios',
       icon: Users,
       roles: ['admin']
     },
     {
       id: 3,
-      name: 'Empleados',
-      path: '/empleados',
-      icon: UserCheck,
+      name: 'Productos',
+      path: '/productos',
+      icon: ShoppingCart,
       roles: ['admin']
     },
     {
       id: 4,
-      name: 'Membresías',
-      path: '/membresias',
-      icon: CreditCard,
+      name: 'Clientes',
+      path: '/clientes',
+      icon: UserCircle,
       roles: ['admin']
     },
     {
       id: 5,
-      name: 'Caja',
-      path: '/caja',
-      icon: Wallet,
+      name: 'Inventario',
+      path: '/inventario',
+      icon: CreditCard,
       roles: ['admin']
     },
     {
       id: 6,
+      name: 'Ventas',
+      path: '/ventas',
+      icon: Wallet,
+      roles: ['admin']
+    },
+    {
+      id: 7,
       name: 'Reportes',
       path: '/reportes',
       icon: ChartBar,
+      roles: ['admin']
+    },
+    {
+      id: 8,
+      name: 'Nómina',
+      path: '/nomina',
+      icon: DollarSign,
+      roles: ['admin']
+    },
+    {
+      id: 9,
+      name: 'Configuración',
+      path: '/configuracion',
+      icon: Settings,
       roles: ['admin']
     }
   ];

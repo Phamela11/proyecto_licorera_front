@@ -52,7 +52,7 @@ export default function PrivateLayout() {
             <button
               onClick={() => {
                 localStorage.removeItem('user');
-                navigate("/auth/login");
+                navigate("/");
               }}
               className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center gap-2"
             >

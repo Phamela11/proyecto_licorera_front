@@ -6,13 +6,20 @@ import { createUser, getUsers, updateUser, deleteUser } from "@/core/services/us
 // Función para formatear fecha
 const formatDate = (dateString: string): string => {
     try {
+        if (!dateString) return '';
         const date = new Date(dateString);
+        // Verificar si la fecha es válida
+        if (isNaN(date.getTime())) {
+            console.warn('Fecha inválida:', dateString);
+            return dateString;
+        }
         return date.toLocaleDateString('es-ES', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
         });
     } catch (error) {
+        console.error('Error al formatear fecha:', error);
         return dateString;
     }
 };
@@ -24,7 +31,7 @@ const mapUserFromAPI = (apiUser: UserFromAPI): User => ({
     email: apiUser.correo,
     telefono: apiUser.telefono,
     rol: apiUser.rol,
-    fecha_creacion: formatDate(apiUser.fecha_creacion),
+    fecha_creacion: formatDate(apiUser.fecha),
     contrasena: apiUser.contrasena
 });
 
@@ -35,7 +42,7 @@ interface UserFromAPI {
     correo: string;
     telefono: string;
     rol: string;
-    fecha_creacion: string;
+    fecha: string;
     contrasena?: string;
 }
 
@@ -222,7 +229,7 @@ const useUsers = () => {
             ? {
                 ...user,
                 telefono: "",
-                fecha_creacion: "",
+                fecha: "",
               }
             : user
         )

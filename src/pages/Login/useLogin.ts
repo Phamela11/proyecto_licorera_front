@@ -18,10 +18,10 @@ const useLogin = () => {
     const onSubmit = async (data: any) => {
         try {
             console.log(data);
-            //const response = await login(data.email, data.password);
-            //console.log(response);
-            navigate('/');
-        } catch (error) {
+            const response = await login(data.email, data.password);
+            console.log(response);
+            navigate('/dashboard');
+        } catch (error) {   
             toast.error((error as any).response.data.message);
         }
     };

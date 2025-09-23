@@ -75,7 +75,7 @@ const Users = () => {
           variant="outline"
           className="bg-blue-100 text-blue-800 hover:bg-blue-200"
         >
-          {rol === "ADMINISTRADOR" ? "Admin" : rol === "EMPLEADO" ? "Empleado" : rol}
+          {rol === "ADMINISTRADOR" ? "Admin" : rol === "EMPLEADO" ? "Empleado" : rol === "CAJERO" ? "Cajero" : rol}
         </Badge>
       ),
     },
@@ -179,8 +179,9 @@ const Users = () => {
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">Selecciona un rol</option>
-                  <option value="ADMINISTRADOR">Administrador</option>
-                  <option value="EMPLEADO">Vendedor</option>
+                  <option value={1}>Administrador</option>
+                  <option value={2}>Empleado</option>
+                  <option value={3}>Cajero</option>
                 </select>
               </div>
               <div className="grid gap-2">

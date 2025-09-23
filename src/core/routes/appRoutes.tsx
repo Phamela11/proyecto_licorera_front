@@ -1,35 +1,23 @@
 import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
-import AuthLayout from '@/layouts/AuthLayout';
 import PrivateLayout from '@/layouts/PrivateLayout';
-import Dashboard from '@/pages/backoffice/dashboard/dashboard';
+import Dashboard from '@/pages/dashboard/dashboard';
 
 // Lazy loading para optimizar el rendimiento
 //auth views
-const Register = lazy(() => import('@/pages/auth/view/register'));
-const Login = lazy(() => import('@/pages/auth/view/Login'));
+const Login = lazy(() => import('@/pages/Login/Login'));
 //backoffice views
-const Users = lazy(() => import('@/pages/backoffice/users/users'));
+const Users = lazy(() => import('@/pages/users/users'));
+const Clientes = lazy(() => import('@/pages/clientes/clientes'));
 //backoffice views
-const Productos = lazy(() => import('@/pages/Productos'));
-const Categorias = lazy(() => import('@/pages/Categorias'));
+const Products = lazy(() => import('@/pages/products/products'));
+
 
 export const appRoutes: RouteObject[] = [
   // Rutas de autenticación
   {
-    path: '/auth',
-    element: <AuthLayout />,
-    children: [
-      {
-        index: true,
-        path: 'login',
-        element: <Login />
-      },
-      {
-        path: 'register',
-        element: <Register />
-      }
-    ]
+    path: '/',
+    element: <Login />,
   },
   
   // Rutas privadas (requieren autenticación)
@@ -38,23 +26,21 @@ export const appRoutes: RouteObject[] = [
     element: <PrivateLayout />,
     children: [
       {
-        index: true,
         path: 'dashboard',
         element: <Dashboard />
       },
       {
-        index: true,
         path: 'usuarios',
         element: <Users />
       },
       {
-        path: 'productos',
-        element: <Productos />
+        path: 'clientes',
+        element: <Clientes />
       },
       {
-        path: 'categorias/:categoria',
-        element: <Categorias />
-      }
+        path: 'productos',
+        element: <Products />
+      },
     ]
   },
   
