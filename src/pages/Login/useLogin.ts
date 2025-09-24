@@ -1,31 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner"; 
+import { login } from "@/core/services/auth.service";
+import { toast } from "sonner";
 
-const useRegister = () => {    
+const useLogin = () => {    
 
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const {
         register,
         handleSubmit: handleSubmitForm,
-        formState: { errors },
-        reset
+        formState: { errors }
     } = useForm();
     
   
-    const onSubmit = (data: any) => {
-        if (data.password !== data.confirmPassword) {
-            toast.warning('Las contraseñas no coinciden');
-            return;
-        }
+    const onSubmit = async (data: any) => {
         try {
             console.log(data);
-            toast.success('Registro exitoso');
-            reset();
-        } catch (error) {
-            console.log(error);
+            const response = await login(data.email, data.password);
+            console.log(response);
+            navigate('/dashboard');
+        } catch (error) {   
+            toast.error((error as any).response.data.message);
         }
     };
   
@@ -42,4 +39,4 @@ const useRegister = () => {
     }
 }
 
-export default useRegister
+export default useLogin
