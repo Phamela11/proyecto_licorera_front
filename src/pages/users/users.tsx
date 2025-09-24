@@ -2,7 +2,6 @@ import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -22,9 +21,44 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TableGlobal, { type TableColumn } from "@/components/ui/tableGlobal";
-import useUsers from "./useUsers";
-import type { User } from "./useUsers";
-// Interfaz para el usuario
+import useUsers, { type User } from "./useUsers";
+
+// Función para obtener colores específicos por rol
+const getRoleStyles = (rol: string) => {
+  const rolUpper = rol?.toUpperCase();
+  
+  switch (rolUpper) {
+    case "ADMINISTRADOR":
+    case "ADMIN":
+      return {
+        backgroundColor: "#ff758f",
+        color: "#c9184a",
+        hoverColor: "#ff4d6d",
+        label: "Admin"
+      };
+    case "EMPLEADO":
+      return {
+        backgroundColor: "#e0aaff",
+        color: "#3c096c",
+        hoverColor: "#d084ff",
+        label: "Empleado"
+      };
+    case "CAJERO":
+      return {
+        backgroundColor: "#fcefb4",
+        color: "#c36f09",
+        hoverColor: "#f9e79f",
+        label: "Cajero"
+      };
+    default:
+      return {
+        backgroundColor: "#e5e7eb", // Gris neutro
+        color: "#374151",
+        hoverColor: "#d1d5db",
+        label: rol || "Sin rol"
+      };
+  }
+};
 
 const Users = () => {
   const { 
@@ -70,14 +104,30 @@ const Users = () => {
       key: "rol",
       title: "Rol",
       align: "center",
-      render: (rol: string) => (
-        <Badge
-          variant="outline"
-          className="bg-blue-100 text-blue-800 hover:bg-blue-200"
-        >
-          {rol === "ADMINISTRADOR" ? "Admin" : rol === "EMPLEADO" ? "Empleado" : rol === "CAJERO" ? "Cajero" : rol}
-        </Badge>
-      ),
+      render: (rol: string) => {
+        const styles = getRoleStyles(rol);
+        return (
+          <div
+            className="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium transition-all duration-200 border-0"
+            style={{
+              backgroundColor: styles.backgroundColor,
+              color: styles.color,
+              minWidth: '60px',
+              textAlign: 'center',
+              border: 'none',
+              outline: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = styles.hoverColor;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = styles.backgroundColor;
+            }}
+          >
+            {styles.label}
+          </div>
+        );
+      },
     },
     {
       key: "fecha_creacion",

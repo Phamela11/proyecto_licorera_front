@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,106 +10,42 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import TableGlobal, { type TableColumn } from "@/components/ui/tableGlobal";
-import { toast } from "sonner";
+import useClientes from "./useClientes";
+import type { Cliente } from "./useClientes";
 
-
-interface Cliente {
-  id: number;
-  nombre: string;
-  email: string;
-  telefono: string;
-  fechaRegistro: string;
-}
-
-
-const initialClientes: Cliente[] = [];
 
 const Clientes = () => {
-  const [clientes, setClientes] = useState<Cliente[]>(initialClientes);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingClienteId, setEditingClienteId] = useState<number | null>(null);
-  const [newCliente, setNewCliente] = useState({
-    nombre: "",
-    email: "",
-    telefono: "",
-  });
-
-  // Filtrar clientes por término de búsqueda
-  const filteredClientes = clientes.filter(
-    (cliente) =>
-      cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cliente.telefono.includes(searchTerm)
-  );
-
-  // Abrir modal para crear cliente
-  const openCreateModal = () => {
-    setIsEditMode(false);
-    setEditingClienteId(null);
-    setNewCliente({
-      nombre: "",
-      email: "",
-      telefono: "",
-    });
-    setIsModalOpen(true);
-  };
-
-  // Abrir modal para editar cliente
-  const openEditModal = (cliente: Cliente) => {
-    setIsEditMode(true);
-    setEditingClienteId(cliente.id);
-    setNewCliente({
-      nombre: cliente.nombre,
-      email: cliente.email,
-      telefono: cliente.telefono,
-    });
-    setIsModalOpen(true);
-  };
-
-  // Crear o actualizar cliente
-  const handleSubmitCliente = () => {
-    if (!newCliente.nombre || !newCliente.email || !newCliente.telefono) {
-      toast.error("Por favor, completa todos los campos obligatorios");
-      return;
-    }
-
-    if (isEditMode && editingClienteId) {
-      // Actualizar cliente existente
-      setClientes(clientes.map(cliente => 
-        cliente.id === editingClienteId 
-          ? { ...cliente, ...newCliente }
-          : cliente
-      ));
-      toast.success("Cliente actualizado exitosamente");
-    } else {
-      // Crear nuevo cliente
-      const cliente: Cliente = {
-        id: Date.now(),
-        ...newCliente,
-        fechaRegistro: new Date().toLocaleDateString('es-ES'),
-      };
-      setClientes([...clientes, cliente]);
-      toast.success("Cliente creado exitosamente");
-    }
-
-    setNewCliente({
-      nombre: "",
-      email: "",
-      telefono: "",
-    });
-    setIsModalOpen(false);
-    setIsEditMode(false);
-    setEditingClienteId(null);
-  };
-
-  // Eliminar cliente
-  const handleDeleteCliente = (id: number) => {
-    setClientes(clientes.filter((cliente) => cliente.id !== id));
-    toast.success("Cliente eliminado exitosamente");
-  };
+  const { 
+    clientes, 
+    filteredClientes, 
+    isModalOpen, 
+    isEditMode,
+    isDeleteDialogOpen,
+    clienteToDelete,
+    newCliente, 
+    setIsModalOpen, 
+    openCreateModal,
+    openEditModal,
+    openDeleteDialog,
+    confirmDeleteClient,
+    cancelDeleteClient,
+    onSubmit, 
+    searchTerm,
+    setSearchTerm,
+    register,
+    handleSubmitForm
+  } = useClientes();
 
   // Configuración de columnas para TableGlobal
   const clienteColumns: TableColumn<Cliente>[] = [
@@ -120,20 +55,21 @@ const Clientes = () => {
       width: "200px",
     },
     {
-      key: "email",
-      title: "Email",
-      width: "250px",
-    },
-    {
       key: "telefono",
       title: "Teléfono",
       align: "center",
       width: "150px",
     },
     {
+      key: "direccion",
+      title: "Dirección",
+      width: "250px",
+    },
+    {
       key: "fechaRegistro",
       title: "Fecha de Registro",
       align: "center",
+      width: "150px",
     },
     {
       key: "actions",
@@ -152,7 +88,7 @@ const Clientes = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDeleteCliente(record.id)}
+            onClick={() => openDeleteDialog(record)}
             className="text-red-600 hover:text-red-700"
             title="Eliminar cliente"
           >
@@ -237,23 +173,9 @@ const Clientes = () => {
               <Label htmlFor="nombre">Nombre completo *</Label>
               <Input
                 id="nombre"
-                value={newCliente.nombre}
-                onChange={(e) =>
-                  setNewCliente({ ...newCliente, nombre: e.target.value })
-                }
+                defaultValue={newCliente.nombre}
+                {...register('nombre')}
                 placeholder="Ingresa el nombre completo"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newCliente.email}
-                onChange={(e) =>
-                  setNewCliente({ ...newCliente, email: e.target.value })
-                }
-                placeholder="cliente@email.com"
               />
             </div>
             <div className="grid gap-2">
@@ -261,11 +183,18 @@ const Clientes = () => {
               <Input
                 id="telefono"
                 type="tel"
-                value={newCliente.telefono}
-                onChange={(e) =>
-                  setNewCliente({ ...newCliente, telefono: e.target.value })
-                }
-                placeholder="555-0000"
+                defaultValue={newCliente.telefono}
+                {...register('telefono')}
+                placeholder="3001234567"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="direccion">Dirección *</Label>
+              <Input
+                id="direccion"
+                defaultValue={newCliente.direccion}
+                {...register('direccion')}
+                placeholder="Ingresa la dirección completa"
               />
             </div>
           </div>
@@ -277,12 +206,36 @@ const Clientes = () => {
             >
               Cancelar
             </Button>
-            <Button onClick={handleSubmitCliente}>
+            <Button onClick={handleSubmitForm(onSubmit)}>
               {isEditMode ? "Actualizar Cliente" : "Crear Cliente"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de confirmación para eliminar */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={cancelDeleteClient}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el cliente{" "}
+              <strong>{clienteToDelete?.nombre}</strong> de la base de datos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDeleteClient}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteClient}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

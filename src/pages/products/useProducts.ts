@@ -81,7 +81,7 @@ const useProducts = () => {
             console.log('Datos mapeados:', mappedProducts);
             
             setProducts(mappedProducts);
-            toast.success("Productos obtenidos exitosamente");
+            // toast.success("Productos obtenidos exitosamente");
         } catch (error) {
             console.log(error);
             toast.error("Error al obtener los productos");
