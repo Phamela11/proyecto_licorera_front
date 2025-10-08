@@ -1,8 +1,8 @@
 import { api } from "../api/axios";
 
-export const getProducts = async () => {
+export const getLicorTypes = async () => {
     try {
-        const response = await api.get('/products');
+        const response = await api.get('/licor-type');
         return response.data;
     } catch (error) {
         console.log(error);
@@ -10,9 +10,9 @@ export const getProducts = async () => {
     }
 }
 
-export const createProduct = async (product: any) => {
+export const createLicorType = async (licorType: any) => {
     try {
-        const response = await api.post('/products', product);
+        const response = await api.post('/licor-type', licorType);
         return response.data;
     } catch (error) {
         console.log(error);
@@ -20,9 +20,9 @@ export const createProduct = async (product: any) => {
     }
 }
 
-export const updateProduct = async (product: any) => {        
+export const updateLicorType = async (licorType: any) => {
     try {
-        const response = await api.put(`/products/${product.id}`, product);
+        const response = await api.put(`/licor-type/${licorType.id}`, licorType);
         return response.data;
     } catch (error) {
         console.log(error);
@@ -30,13 +30,12 @@ export const updateProduct = async (product: any) => {
     }
 }
 
-export const deleteProduct = async (id: number) => {
+export const deleteLicorType = async (id: number) => {  
     try {
-        const response = await api.delete(`/products/${id}`);
+        const response = await api.delete(`/licor-type/${id}`);
         return response.data;
     } catch (error) {
         console.log(error);
         throw error;
     }
 }
-

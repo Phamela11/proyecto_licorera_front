@@ -44,7 +44,8 @@ const Products = () => {
     searchTerm,
     setSearchTerm,
     register,
-    handleSubmitForm
+    handleSubmitForm,
+    licorTypes
   } = useProducts();
 
   // Configuración de columnas para TableGlobal
@@ -162,16 +163,9 @@ const Products = () => {
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">Selecciona el tipo de licor</option>
-                  <option value="Whisky">Whisky</option>
-                  <option value="Ron">Ron</option>
-                  <option value="Vodka">Vodka</option>
-                  <option value="Tequila">Tequila</option>
-                  <option value="Brandy">Brandy</option>
-                  <option value="Ginebra">Ginebra</option>
-                  <option value="Licor">Licor</option>
-                  <option value="Vino">Vino</option>
-                  <option value="Cerveza">Cerveza</option>
-                  <option value="Otro">Otro</option>
+                  {licorTypes.map((licorType) => (
+                    <option key={licorType.id} value={licorType.nombre}>{licorType.nombre}</option>
+                  ))}
                 </select>
               </div>
               <div className="grid gap-2">

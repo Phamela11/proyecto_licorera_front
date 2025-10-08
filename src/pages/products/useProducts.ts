@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { createProduct, getProducts, updateProduct, deleteProduct } from "../../core/services/products.service";
+import { getLicorTypes } from "../../core/services/licorType.service";
 
 // Función para formatear fecha
 const formatDate = (dateString: string): string => {
@@ -64,12 +65,27 @@ const useProducts = () => {
       precio_venta: 0,
       fecha: "",
     });
+
+    const [licorTypes, setLicorTypes] = useState<any[]>([]);
     const { register, handleSubmit: handleSubmitForm, reset, setValue } = useForm();
 
     useEffect(() => {
         getDataProducts();
+        getDataLicorTypes();
     }, []);
 
+
+    // Obtener los tipos de licor
+    const getDataLicorTypes = async () => {
+
+        try {
+            const response = await getLicorTypes();
+            setLicorTypes(response.data);
+        } catch (error) {
+            console.log(error);
+            toast.error("Error al obtener los tipos de licor");
+        }
+    }
 
     const getDataProducts = async () => {
         try {
@@ -225,7 +241,8 @@ const useProducts = () => {
         searchTerm,
         setSearchTerm,
         register,
-        handleSubmitForm
+        handleSubmitForm,
+        licorTypes
     }
 }
 

@@ -7,7 +7,8 @@ import {
     DollarSign,
     Settings,
     UserCircle,
-    ShoppingCart
+    ShoppingCart,
+    List
   } from "lucide-react";
   
   export interface Module {
@@ -57,27 +58,34 @@ import {
     },
     {
       id: 6,
+      name: 'Tipos de Licor',
+      path: '/tipos-de-licor',
+      icon: List,
+      roles: ['admin']
+    },
+    {
+      id: 7,
       name: 'Ventas',
       path: '/ventas',
       icon: Wallet,
       roles: ['admin']
     },
     {
-      id: 7,
+      id: 8,
       name: 'Reportes',
       path: '/reportes',
       icon: ChartBar,
       roles: ['admin']
     },
     {
-      id: 8,
+      id: 9,
       name: 'Nómina',
       path: '/nomina',
       icon: DollarSign,
       roles: ['admin']
     },
     {
-      id: 9,
+      id: 10,
       name: 'Configuración',
       path: '/configuracion',
       icon: Settings,
