@@ -11,6 +11,7 @@ const Users = lazy(() => import('@/pages/users/users'));
 const Clientes = lazy(() => import('@/pages/clientes/clientes'));
 //backoffice views
 const Products = lazy(() => import('@/pages/products/products'));
+const TiposLicoresPage = lazy(() => import('@/pages/tipo_licores/tipo_licores'));
 
 
 export const appRoutes: RouteObject[] = [
@@ -41,6 +42,10 @@ export const appRoutes: RouteObject[] = [
         path: 'productos',
         element: <Products />
       },
+      {
+        path: 'tipos-licores',
+        element: <TiposLicoresPage /> 
+      }
     ]
   },
   

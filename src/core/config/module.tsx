@@ -7,6 +7,7 @@ import {
     DollarSign,
     Settings,
     UserCircle,
+    GlassWater,
     ShoppingCart
   } from "lucide-react";
   
@@ -48,36 +49,43 @@ import {
       icon: UserCircle,
       roles: ['admin']
     },
+     {
+    id: 5, 
+    name: "Tipo de Licores",
+    path: "/tipos-licores",
+    icon: GlassWater, 
+    roles: ["admin", "empleado"], // Ajusta los roles según tu lógica
+    },
     {
-      id: 5,
+      id: 6,
       name: 'Inventario',
       path: '/inventario',
       icon: CreditCard,
       roles: ['admin']
     },
     {
-      id: 6,
+      id: 7,
       name: 'Ventas',
       path: '/ventas',
       icon: Wallet,
       roles: ['admin']
     },
     {
-      id: 7,
+      id: 8,
       name: 'Reportes',
       path: '/reportes',
       icon: ChartBar,
       roles: ['admin']
     },
     {
-      id: 8,
+      id: 9,
       name: 'Nómina',
       path: '/nomina',
       icon: DollarSign,
       roles: ['admin']
     },
     {
-      id: 9,
+      id: 10,
       name: 'Configuración',
       path: '/configuracion',
       icon: Settings,
