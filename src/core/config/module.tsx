@@ -8,7 +8,8 @@ import {
     Settings,
     UserCircle,
     ShoppingCart,
-    List
+    List,
+    GlassWater
   } from "lucide-react";
   
   export interface Module {
@@ -49,43 +50,43 @@ import {
       icon: UserCircle,
       roles: ['admin']
     },
+     {
+    id: 5, 
+    name: "Tipo de Licores",
+    path: "/tipo-licor",
+    icon: GlassWater, 
+    roles: ["admin", "empleado"], // Ajusta los roles según tu lógica
+    },
     {
-      id: 5,
+      id: 6,
       name: 'Inventario',
       path: '/inventario',
       icon: CreditCard,
       roles: ['admin']
     },
     {
-      id: 6,
-      name: 'Tipos de Licor',
-      path: '/tipos-de-licor',
-      icon: List,
-      roles: ['admin']
-    },
-    {
-      id: 7,
+      id: 8,
       name: 'Ventas',
       path: '/ventas',
       icon: Wallet,
       roles: ['admin']
     },
     {
-      id: 8,
+      id: 9,
       name: 'Reportes',
       path: '/reportes',
       icon: ChartBar,
       roles: ['admin']
     },
     {
-      id: 9,
+      id: 10,
       name: 'Nómina',
       path: '/nomina',
       icon: DollarSign,
       roles: ['admin']
     },
     {
-      id: 10,
+      id: 11,
       name: 'Configuración',
       path: '/configuracion',
       icon: Settings,
