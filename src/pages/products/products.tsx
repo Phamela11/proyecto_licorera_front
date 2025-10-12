@@ -45,7 +45,8 @@ const Products = () => {
     setSearchTerm,
     register,
     handleSubmitForm,
-    licorTypes
+    licorTypes,
+    providers
   } = useProducts();
 
   // Configuración de columnas para TableGlobal
@@ -56,8 +57,13 @@ const Products = () => {
       width: "200px",
     },
     {
-      key: "tipo_licor",
+      key: "tipo_licor_nombre",
       title: "Tipo de Licor",
+      width: "150px",
+    },
+    {
+      key: "proveedor_nombre",
+      title: "Proveedor",
       width: "150px",
     },
     {
@@ -79,6 +85,17 @@ const Products = () => {
       render: (precio: number | string) => (
         <span className="font-medium text-blue-600">
           ${Number(precio).toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      key: "stock",
+      title: "Stock",
+      align: "center",
+      width: "80px",
+      render: (stock: number | string) => (
+        <span className={`font-medium ${Number(stock) > 10 ? 'text-green-600' : Number(stock) > 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+          {Number(stock)}
         </span>
       ),
     },
@@ -155,16 +172,30 @@ const Products = () => {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="tipo_licor">Tipo de Licor *</Label>
+                <Label htmlFor="id_tipo_licor">Tipo de Licor *</Label>
                 <select
-                  id="tipo_licor"
-                  defaultValue={newProduct.tipo_licor}
-                  {...register('tipo_licor')}
+                  id="id_tipo_licor"
+                  defaultValue={newProduct.id_tipo_licor || ""}
+                  {...register('id_tipo_licor')}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">Selecciona el tipo de licor</option>
                   {licorTypes.map((licorType) => (
-                    <option key={licorType.id} value={licorType.nombre}>{licorType.nombre}</option>
+                    <option key={licorType.id_tipo_licor} value={licorType.id_tipo_licor}>{licorType.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="id_proveedor">Proveedor *</Label>
+                <select
+                  id="id_proveedor"
+                  defaultValue={newProduct.id_proveedor || ""}
+                  {...register('id_proveedor')}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">Selecciona el proveedor</option>
+                  {providers.map((provider) => (
+                    <option key={provider.id_proveedor} value={provider.id_proveedor}>{provider.nombre}</option>
                   ))}
                 </select>
               </div>
@@ -190,6 +221,17 @@ const Products = () => {
                   defaultValue={newProduct.precio_venta}
                   {...register('precio_venta')}
                   placeholder="0.00"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="stock">Stock *</Label>
+                <Input
+                  id="stock"
+                  type="number"
+                  min="0"
+                  defaultValue={newProduct.stock}
+                  {...register('stock')}
+                  placeholder="0"
                 />
               </div>
             </div>

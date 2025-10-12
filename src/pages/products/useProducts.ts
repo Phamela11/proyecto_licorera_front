@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { createProduct, getProducts, updateProduct, deleteProduct } from "../../core/services/products.service";
 import { getLicorTypes } from "../../core/services/licorType.service";
+import { getProviders } from "../../core/services/providers.service";
 
 // Función para formatear fecha
 const formatDate = (dateString: string): string => {
@@ -19,33 +20,60 @@ const formatDate = (dateString: string): string => {
 };
 
 // Función para mapear datos del backend al frontend
-const mapProductFromAPI = (apiProduct: ProductFromAPI): Product => ({
-    id: apiProduct.id_producto,
-    nombre: apiProduct.nombre,
-    tipo_licor: apiProduct.tipo_licor,
-    precio_compra: Number(apiProduct.precio_compra) || 0,
-    precio_venta: Number(apiProduct.precio_venta) || 0,
-    fecha: formatDate(apiProduct.fecha)
-});
+const mapProductFromAPI = (apiProduct: ProductFromAPI, licorTypes: LicorType[], providers: Provider[]): Product => {
+    const licorType = licorTypes.find(lt => lt.id_tipo_licor === apiProduct.id_tipo_licor);
+    const provider = providers.find(p => p.id_proveedor === apiProduct.id_proveedor);
+    return {
+        id: apiProduct.id_producto,
+        nombre: apiProduct.nombre,
+        id_tipo_licor: apiProduct.id_tipo_licor,
+        id_proveedor: apiProduct.id_proveedor,
+        tipo_licor_nombre: licorType?.nombre || 'Sin tipo',
+        proveedor_nombre: provider?.nombre || 'Sin proveedor',
+        precio_compra: Number(apiProduct.precio_compra) || 0,
+        precio_venta: Number(apiProduct.precio_venta) || 0,
+        fecha: formatDate(apiProduct.fecha),
+        stock: Number(apiProduct.stock) || 0
+    };
+};
 
 // Interfaz para los datos que vienen del backend
 interface ProductFromAPI {
     id_producto: number;
     nombre: string;
-    tipo_licor: string;
+    id_tipo_licor: number;
+    id_proveedor: number;
+    tipo_licor?: string; // Opcional para compatibilidad
     precio_compra: number;
     precio_venta: number;
     fecha: string;
+    stock: number;
 }
 
 // Interfaz para el frontend
 export interface Product {
     id: number;
     nombre: string;
-    tipo_licor: string;
+    id_tipo_licor: number;
+    id_proveedor: number;
+    tipo_licor_nombre: string;
+    proveedor_nombre: string;
     precio_compra: number;
     precio_venta: number;
     fecha: string;
+    stock: number;
+}
+
+// Interfaz para tipo de licor
+export interface LicorType {
+    id_tipo_licor: number;
+    nombre: string;
+}
+
+// Interfaz para proveedor
+export interface Provider {
+    id_proveedor: number;
+    nombre: string;
 }
   
   
@@ -60,19 +88,28 @@ const useProducts = () => {
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [newProduct, setNewProduct] = useState({
       nombre: "",
-      tipo_licor: "",
+      id_tipo_licor: 0,
+      id_proveedor: 0,
       precio_compra: 0,
       precio_venta: 0,
       fecha: "",
+      stock: 0,
     });
 
-    const [licorTypes, setLicorTypes] = useState<any[]>([]);
+    const [licorTypes, setLicorTypes] = useState<LicorType[]>([]);
+    const [providers, setProviders] = useState<Provider[]>([]);
     const { register, handleSubmit: handleSubmitForm, reset, setValue } = useForm();
 
     useEffect(() => {
-        getDataProducts();
         getDataLicorTypes();
+        getDataProviders();
     }, []);
+
+    useEffect(() => {
+        if (licorTypes.length > 0 && providers.length > 0) {
+            getDataProducts();
+        }
+    }, [licorTypes, providers]);
 
 
     // Obtener los tipos de licor
@@ -80,10 +117,23 @@ const useProducts = () => {
 
         try {
             const response = await getLicorTypes();
+            console.log('Datos del backend:', response.data);
             setLicorTypes(response.data);
         } catch (error) {
             console.log(error);
             toast.error("Error al obtener los tipos de licor");
+        }
+    }
+
+    // Obtener los proveedores
+    const getDataProviders = async () => {
+        try {
+            const response = await getProviders();
+            console.log('Proveedores del backend:', response.data);
+            setProviders(response.data);
+        } catch (error) {
+            console.log(error);
+            toast.error("Error al obtener los proveedores");
         }
     }
 
@@ -93,7 +143,9 @@ const useProducts = () => {
             console.log('Datos del backend:', response.data);
             
             // Mapear los datos del backend al formato del frontend
-            const mappedProducts = response.data.map((apiProduct: ProductFromAPI) => mapProductFromAPI(apiProduct));
+            const mappedProducts = response.data.map((apiProduct: ProductFromAPI) => 
+                mapProductFromAPI(apiProduct, licorTypes, providers)
+            );
             console.log('Datos mapeados:', mappedProducts);
             
             setProducts(mappedProducts);
@@ -110,7 +162,8 @@ const useProducts = () => {
       return products.filter(
         (product) =>
           product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.tipo_licor.toLowerCase().includes(searchTerm.toLowerCase())
+          product.tipo_licor_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.proveedor_nombre.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }, [products, searchTerm]);
   
@@ -121,10 +174,12 @@ const useProducts = () => {
         reset(); // Limpiar el formulario
         setNewProduct({
             nombre: "",
-            tipo_licor: "",
+            id_tipo_licor: 0,
+            id_proveedor: 0,
             precio_compra: 0,
             precio_venta: 0,
             fecha: "",
+            stock: 0,
         });
         setIsModalOpen(true);
     };
@@ -135,29 +190,37 @@ const useProducts = () => {
         setEditingProductId(product.id);
         setNewProduct({
             nombre: product.nombre,
-            tipo_licor: product.tipo_licor,
+            id_tipo_licor: product.id_tipo_licor,
+            id_proveedor: product.id_proveedor,
             precio_compra: product.precio_compra,
             precio_venta: product.precio_venta,
             fecha: product.fecha,
+            stock: product.stock,
         });
         // Establecer valores en el formulario
         setValue('nombre', product.nombre);
-        setValue('tipo_licor', product.tipo_licor);
+        setValue('id_tipo_licor', product.id_tipo_licor);
+        setValue('id_proveedor', product.id_proveedor);
         setValue('precio_compra', product.precio_compra);
         setValue('precio_venta', product.precio_venta);
+        setValue('stock', product.stock);
         setIsModalOpen(true);
     };
 
     // Crear o actualizar producto
         const onSubmit = async (data: any) => {
+            console.log(data);
         try {
             if (isEditMode && editingProductId) {
                 // Actualizar producto existente
                 const updateData = { 
                     ...data, 
                     id: editingProductId,
+                    id_tipo_licor: parseInt(data.id_tipo_licor),
+                    id_proveedor: parseInt(data.id_proveedor),
                     precio_compra: parseFloat(data.precio_compra),
-                    precio_venta: parseFloat(data.precio_venta)
+                    precio_venta: parseFloat(data.precio_venta),
+                    stock: parseInt(data.stock)
                 };
                 
                 await updateProduct(updateData);
@@ -166,8 +229,11 @@ const useProducts = () => {
                 // Crear nuevo producto
                 const createData = {
                     ...data,
+                    id_tipo_licor: parseInt(data.id_tipo_licor),
+                    id_proveedor: parseInt(data.id_proveedor),
                     precio_compra: parseFloat(data.precio_compra),
                     precio_venta: parseFloat(data.precio_venta),
+                    stock: parseInt(data.stock),
                     fecha: new Date().toISOString().split('T')[0] // Fecha actual
                 };
                 await createProduct(createData);
@@ -178,10 +244,12 @@ const useProducts = () => {
             reset();
             setNewProduct({
                 nombre: "",
-                tipo_licor: "",
+                id_tipo_licor: 0,
+                id_proveedor: 0,
                 precio_compra: 0,
                 precio_venta: 0,
                 fecha: "",
+                stock: 0,
             });
             setIsModalOpen(false);
             setIsEditMode(false);
@@ -242,7 +310,8 @@ const useProducts = () => {
         setSearchTerm,
         register,
         handleSubmitForm,
-        licorTypes
+        licorTypes,
+        providers
     }
 }
 

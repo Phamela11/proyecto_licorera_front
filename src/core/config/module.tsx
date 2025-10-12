@@ -8,8 +8,8 @@ import {
     Settings,
     UserCircle,
     ShoppingCart,
-    List,
-    GlassWater
+    GlassWater,
+    Truck
   } from "lucide-react";
   
   export interface Module {
@@ -56,6 +56,13 @@ import {
     path: "/tipo-licor",
     icon: GlassWater, 
     roles: ["admin", "empleado"], // Ajusta los roles según tu lógica
+    },
+    {
+      id: 7,
+      name: 'Proveedores',
+      path: '/proveedores',
+      icon: Truck,
+      roles: ['admin']
     },
     {
       id: 6,
