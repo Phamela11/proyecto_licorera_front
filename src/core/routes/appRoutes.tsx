@@ -13,6 +13,7 @@ const Clientes = lazy(() => import('@/pages/clientes/clientes'));
 const Products = lazy(() => import('@/pages/products/products'));
 const LicorTypes = lazy(() => import('@/pages/licorTypes/licorTypes'));
 const Providers = lazy(() => import('@/pages/providers/providers'));
+const Inventory = lazy(() => import('@/pages/inventory/inventory'));
 
 export const appRoutes: RouteObject[] = [
   // Rutas de autenticación
@@ -49,6 +50,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: 'proveedores',
         element: <Providers />
+      },
+      {
+        path: 'inventario',
+        element: <Inventory />
       }
     ]
   },

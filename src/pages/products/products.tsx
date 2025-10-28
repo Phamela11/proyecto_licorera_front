@@ -1,7 +1,8 @@
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +47,9 @@ const Products = () => {
     register,
     handleSubmitForm,
     licorTypes,
-    providers
+    providers,
+    setNewProduct,
+    setValue
   } = useProducts();
 
   // Configuración de columnas para TableGlobal
@@ -59,11 +62,6 @@ const Products = () => {
     {
       key: "tipo_licor_nombre",
       title: "Tipo de Licor",
-      width: "150px",
-    },
-    {
-      key: "proveedor_nombre",
-      title: "Proveedor",
       width: "150px",
     },
     {
@@ -85,17 +83,6 @@ const Products = () => {
       render: (precio: number | string) => (
         <span className="font-medium text-blue-600">
           ${Number(precio).toFixed(2)}
-        </span>
-      ),
-    },
-    {
-      key: "stock",
-      title: "Stock",
-      align: "center",
-      width: "80px",
-      render: (stock: number | string) => (
-        <span className={`font-medium ${Number(stock) > 10 ? 'text-green-600' : Number(stock) > 0 ? 'text-yellow-600' : 'text-red-600'}`}>
-          {Number(stock)}
         </span>
       ),
     },
@@ -130,6 +117,7 @@ const Products = () => {
           </Button>
         </div>
       ),
+      width: "80px",
     },
   ];
 
@@ -186,18 +174,69 @@ const Products = () => {
                 </select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="id_proveedor">Proveedor *</Label>
-                <select
-                  id="id_proveedor"
-                  defaultValue={newProduct.id_proveedor || ""}
-                  {...register('id_proveedor')}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">Selecciona el proveedor</option>
-                  {providers.map((provider) => (
-                    <option key={provider.id_proveedor} value={provider.id_proveedor}>{provider.nombre}</option>
-                  ))}
-                </select>
+                <Label htmlFor="id_proveedores">Proveedores</Label>
+                <div className="space-y-2">
+                  <select
+                    id="proveedor-select"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    onChange={(e) => {
+                      const selectedId = parseInt(e.target.value);
+                      if (selectedId && !newProduct.id_proveedores.includes(selectedId)) {
+                        const updatedProveedores = [...newProduct.id_proveedores, selectedId];
+                        setNewProduct(prev => ({ ...prev, id_proveedores: updatedProveedores }));
+                        setValue('id_proveedores', updatedProveedores);
+                        e.target.value = '';
+                      }
+                    }}
+                  >
+                    <option value="">Selecciona un proveedor para agregar</option>
+                    {providers
+                      .filter(provider => !newProduct.id_proveedores.includes(provider.id_proveedor))
+                      .map((provider) => (
+                        <option key={provider.id_proveedor} value={provider.id_proveedor}>
+                          {provider.nombre}
+                        </option>
+                      ))}
+                  </select>
+                  
+                  {/* Mostrar proveedores seleccionados */}
+                  <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-gray-50">
+                    {newProduct.id_proveedores.length === 0 ? (
+                      <span className="text-sm text-gray-500">No hay proveedores seleccionados</span>
+                    ) : (
+                      newProduct.id_proveedores.map((proveedorId) => {
+                        const proveedor = providers.find(p => p.id_proveedor === proveedorId);
+                        return (
+                          <Badge 
+                            key={proveedorId} 
+                            variant="secondary" 
+                            className="flex items-center gap-1 px-2 py-1"
+                          >
+                            {proveedor?.nombre}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedProveedores = newProduct.id_proveedores.filter(id => id !== proveedorId);
+                                setNewProduct(prev => ({ ...prev, id_proveedores: updatedProveedores }));
+                                setValue('id_proveedores', updatedProveedores);
+                              }}
+                              className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        );
+                      })
+                    )}
+                  </div>
+                  
+                  {/* Campo oculto para el formulario */}
+                  <input
+                    type="hidden"
+                    {...register('id_proveedores')}
+                    value={newProduct.id_proveedores.join(',')}
+                  />
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="precio_compra">Precio de Compra *</Label>
@@ -221,17 +260,6 @@ const Products = () => {
                   defaultValue={newProduct.precio_venta}
                   {...register('precio_venta')}
                   placeholder="0.00"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="stock">Stock *</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  min="0"
-                  defaultValue={newProduct.stock}
-                  {...register('stock')}
-                  placeholder="0"
                 />
               </div>
             </div>

@@ -12,7 +12,15 @@ export const getProducts = async () => {
 
 export const createProduct = async (product: any) => {
     try {
-        const response = await api.post('/products', product);
+        // Convertir id_proveedores a array si viene como string
+        const productData = {
+            ...product,
+            id_proveedores: Array.isArray(product.id_proveedores) 
+                ? product.id_proveedores 
+                : [product.id_proveedores].filter(Boolean)
+        };
+        
+        const response = await api.post('/products', productData);
         return response.data;
     } catch (error) {
         console.log(error);
@@ -22,7 +30,15 @@ export const createProduct = async (product: any) => {
 
 export const updateProduct = async (product: any) => {        
     try {
-        const response = await api.put(`/products/${product.id}`, product);
+        // Convertir id_proveedores a array si viene como string
+        const productData = {
+            ...product,
+            id_proveedores: Array.isArray(product.id_proveedores) 
+                ? product.id_proveedores 
+                : [product.id_proveedores].filter(Boolean)
+        };
+        
+        const response = await api.put(`/products/${product.id}`, productData);
         return response.data;
     } catch (error) {
         console.log(error);
