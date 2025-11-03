@@ -56,9 +56,9 @@ export default function PrivateLayout() {
   };
 
   return (
-    <div className="h-full max-h-screen w-full flex flex-col bg-gray-100 overflow-hidden overflow-y-hidden">
+    <div className="h-screen w-full flex flex-col bg-gray-100 overflow-hidden">
 
-        <header className="h-[56px] w-full flex flex-row items-center justify-between bg-black shadow-sm border-b border-gray-700 ">
+        <header className="h-[56px] flex-shrink-0 w-full flex flex-row items-center justify-between bg-black shadow-sm border-b border-gray-700 ">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-semibold text-white">Panel Administrativo</h1>
       
@@ -73,7 +73,7 @@ export default function PrivateLayout() {
           </div>
         </header>
       
-      <div className="h-[calc(100vh-56px)] w-full flex flex-row overflow-x-hidden overflow-y-hidden">
+      <div className="flex-1 w-full flex flex-row overflow-hidden min-h-0">
         <aside className="w-64 bg-black border-r border-gray-700 flex flex-col ">
           <nav className="p-4 flex-1">
             <ul className="space-y-1">
@@ -129,7 +129,7 @@ export default function PrivateLayout() {
         </aside>
 
         {/* Content */}
-        <main className="w-full h-full overflow-y-auto bg-gray-50">
+        <main className="flex-1 w-full overflow-y-auto bg-gray-50 min-h-0">
           <Outlet />
         </main>
       </div>

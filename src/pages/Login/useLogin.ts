@@ -20,6 +20,10 @@ const useLogin = () => {
             console.log(data);
             const response = await login(data.email, data.password);
             console.log(response);
+            // Guardar el usuario en localStorage para que el interceptor de axios pueda usarlo
+            if (response.data) {
+                localStorage.setItem('user', JSON.stringify(response.data));
+            }
             navigate('/dashboard');
         } catch (error) {   
             toast.error((error as any).response.data.message);

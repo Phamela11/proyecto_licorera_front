@@ -62,6 +62,9 @@ export interface Product {
     nombre: string;
     tipo_licor_nombre: string;
     precio_venta: number;
+    precio_compra?: number;
+    id_proveedores?: number[]; // Array de IDs de proveedores
+    proveedores_nombres?: string; // Nombres de todos los proveedores
 }
 
 // Interfaz para proveedor
@@ -74,6 +77,8 @@ export interface Provider {
 export interface InventoryMovement {
     id: number;
     id_inventario: number;
+    id_proveedor?: number;
+    proveedor_nombre?: string;
     tipo_movimiento: 'ENTRADA' | 'SALIDA';
     cantidad: number;
     precio_unitario: number;
@@ -107,6 +112,7 @@ const useInventory = () => {
         tipo_movimiento: 'ENTRADA' as 'ENTRADA' | 'SALIDA',
         cantidad: 0,
         precio_unitario: 0,
+        id_proveedor: 0,
     });
 
     const [products, setProducts] = useState<Product[]>([]);
@@ -130,7 +136,25 @@ const useInventory = () => {
         try {
             const response = await getProducts();
             console.log('Productos del backend:', response.data);
-            setProducts(response.data);
+            // Normalizar proveedores_ids para asegurar que sea un array
+            const normalizedProducts = response.data.map((product: any) => {
+                let proveedoresIds = product.proveedores_ids || [];
+                // Si viene como array de PostgreSQL (con posibles nulls), filtrar y convertir
+                if (Array.isArray(proveedoresIds)) {
+                    proveedoresIds = proveedoresIds.filter((id: any) => id !== null && id !== undefined);
+                } else if (proveedoresIds) {
+                    // Si viene como string o número único, convertirlo a array
+                    proveedoresIds = [proveedoresIds].filter(Boolean);
+                } else {
+                    proveedoresIds = [];
+                }
+                return {
+                    ...product,
+                    id_proveedores: proveedoresIds,
+                    proveedores_ids: proveedoresIds // Mantener compatibilidad
+                };
+            });
+            setProducts(normalizedProducts);
         } catch (error) {
             console.log(error);
             toast.error("Error al obtener los productos");
@@ -208,6 +232,7 @@ const useInventory = () => {
             tipo_movimiento: 'ENTRADA',
             cantidad: 0,
             precio_unitario: inventoryEntry.precio_venta || 0,
+            id_proveedor: 0,
         });
         setIsMovementModalOpen(true);
         
@@ -216,6 +241,7 @@ const useInventory = () => {
             setValue('tipo_movimiento', 'ENTRADA');
             setValue('cantidad', '');
             setValue('precio_unitario', inventoryEntry.precio_venta || 0);
+            setValue('id_proveedor', '');
             if (inventoryEntry.id === 0) {
                 setValue('id_producto', '');
             }
@@ -243,6 +269,7 @@ const useInventory = () => {
             const cantidad = parseInt(data.cantidad);
             const precioUnitario = parseFloat(data.precio_unitario);
             const tipoMovimiento = data.tipo_movimiento;
+            const idProveedor = tipoMovimiento === 'ENTRADA' ? parseInt(data.id_proveedor) : null;
             
             // Si no hay id_inventario (movimiento general), buscar o crear entrada de inventario
             if (inventoryId === 0 && productId) {
@@ -267,7 +294,8 @@ const useInventory = () => {
                 id_inventario: inventoryId,
                 tipo_movimiento: tipoMovimiento,
                 cantidad: cantidad,
-                precio_unitario: precioUnitario
+                precio_unitario: precioUnitario,
+                id_proveedor: idProveedor
             };
             
             await createInventoryMovement(movementData);
@@ -301,6 +329,7 @@ const useInventory = () => {
                 tipo_movimiento: 'ENTRADA',
                 cantidad: 0,
                 precio_unitario: 0,
+                id_proveedor: 0,
             });
             setIsMovementModalOpen(false);
             
@@ -309,6 +338,7 @@ const useInventory = () => {
             setValue('cantidad', '');
             setValue('precio_unitario', 0);
             setValue('id_producto', '');
+            setValue('id_proveedor', '');
             
             // Recargar datos
             await getDataInventory();
@@ -372,6 +402,7 @@ const useInventory = () => {
         setSearchTerm,
         register,
         handleSubmitForm,
+        setValue,
         products,
         providers
     }

@@ -45,7 +45,9 @@ const Inventory = () => {
     setSearchTerm,
     register,
     handleSubmitForm,
-    products
+    setValue,
+    products,
+    providers
   } = useInventory();
 
   // Estado para calcular total en tiempo real
@@ -53,6 +55,28 @@ const Inventory = () => {
     cantidad: 0,
     precio_unitario: 0
   });
+
+  // Estado para el producto seleccionado
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+
+  // Obtener proveedores filtrados según el producto seleccionado
+  const filteredProviders = selectedProductId
+    ? (() => {
+        const selectedProduct = products.find((p: any) => p.id_producto === selectedProductId);
+        if (selectedProduct) {
+          // Usar id_proveedores o proveedores_ids (compatibilidad)
+          const proveedoresIds = selectedProduct.id_proveedores || selectedProduct.proveedores_ids || [];
+          if (Array.isArray(proveedoresIds) && proveedoresIds.length > 0) {
+            // Filtrar nulls/undefined
+            const validIds = proveedoresIds.filter((id: any) => id !== null && id !== undefined);
+            return providers.filter((provider: any) => 
+              validIds.includes(provider.id_proveedor)
+            );
+          }
+        }
+        return [];
+      })()
+    : providers;
 
   // Configuración de columnas para la tabla de inventario (stock actual)
   const stockColumns: TableColumn<InventoryEntry>[] = [
@@ -134,6 +158,18 @@ const Inventory = () => {
       },
     },
     {
+      key: "proveedor_nombre",
+      title: "Proveedor",
+      width: "180px",
+      align: "center",
+      render: (proveedor: string, record: InventoryMovement) => {
+        if (!proveedor || proveedor === 'null' || proveedor === null) {
+          return <span className="text-gray-400 italic">N/A</span>;
+        }
+        return <span className="font-medium">{proveedor}</span>;
+      },
+    },
+    {
       key: "tipo_movimiento",
       title: "Tipo",
       width: "120px",
@@ -191,15 +227,16 @@ const Inventory = () => {
 
 
   return (
-      <div className="flex flex-col w-full">
-        <div className="p-6 space-y-6 ">
+      <div className="w-full min-h-0">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Inventario</h1>
-            <p className="text-muted-foreground">
-              Gestiona el stock a través de movimientos de inventario
-            </p>
+        <div className="p-6 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Inventario</h1>
+              <p className="text-muted-foreground">
+                Gestiona el stock a través de movimientos de inventario
+              </p>
+            </div>
           </div>
         </div>
 
@@ -209,6 +246,15 @@ const Inventory = () => {
           if (!open) {
             // Resetear el formulario cuando se cierre el modal
             setMovementForm({ cantidad: 0, precio_unitario: 0 });
+            setSelectedProductId(null);
+          } else {
+            // Cuando se abre el modal, si hay una entrada de inventario seleccionada, establecer el producto
+            if (newMovement.id_inventario > 0) {
+              const inventoryEntry = inventory.find(e => e.id === newMovement.id_inventario);
+              if (inventoryEntry) {
+                setSelectedProductId(inventoryEntry.id_producto);
+              }
+            }
           }
         }}>
           <DialogContent className="sm:max-w-[425px]">
@@ -228,6 +274,21 @@ const Inventory = () => {
                   <select
                     id="id_producto"
                     {...register('id_producto')}
+                    onChange={(e) => {
+                      const productId = e.target.value ? parseInt(e.target.value) : null;
+                      setSelectedProductId(productId);
+                      setValue('id_producto', e.target.value);
+                      // Limpiar el proveedor cuando cambia el producto
+                      setValue('id_proveedor', '');
+                      // Cargar precio si existe el producto
+                      if (productId) {
+                        const product = products.find((p: any) => p.id_producto === productId);
+                        if (product) {
+                          setValue('precio_unitario', product.precio_compra || 0);
+                          setMovementForm(prev => ({ ...prev, precio_unitario: product.precio_compra || 0 }));
+                        }
+                      }
+                    }}
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Selecciona el producto</option>
@@ -244,12 +305,49 @@ const Inventory = () => {
                 <select
                   id="tipo_movimiento"
                   {...register('tipo_movimiento')}
+                  onChange={(e) => {
+                    setValue('tipo_movimiento', e.target.value);
+                    setNewMovement((prev) => ({ ...prev, tipo_movimiento: e.target.value as 'ENTRADA' | 'SALIDA' }));
+                    if (e.target.value === 'SALIDA') {
+                      setValue('id_proveedor', '');
+                      setSelectedProductId(null);
+                    }
+                  }}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="ENTRADA">Entrada de Stock</option>
                   <option value="SALIDA">Salida de Stock</option>
                 </select>
               </div>
+              {newMovement.tipo_movimiento === 'ENTRADA' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="id_proveedor">
+                    Proveedor * 
+                    {selectedProductId && filteredProviders.length === 0 && (
+                      <span className="text-xs text-red-500 ml-2">(Este producto no tiene proveedores asignados)</span>
+                    )}
+                  </Label>
+                  <select
+                    id="id_proveedor"
+                    {...register('id_proveedor')}
+                    disabled={!selectedProductId || filteredProviders.length === 0}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">
+                      {!selectedProductId 
+                        ? "Primero selecciona un producto" 
+                        : filteredProviders.length === 0 
+                        ? "No hay proveedores para este producto"
+                        : "Selecciona un proveedor"}
+                    </option>
+                    {filteredProviders.map((provider: any) => (
+                      <option key={provider.id_proveedor} value={provider.id_proveedor}>
+                        {provider.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="grid gap-2">
                 <Label htmlFor="cantidad">Cantidad *</Label>
                 <Input
@@ -305,11 +403,10 @@ const Inventory = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </div>
 
         {/* Barra de búsqueda */}
-        <div className="flex items-center space-x-2">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex items-center space-x-2 mb-4 px-6">
+          <div className="relative max-w-sm">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar en inventario..."
@@ -321,121 +418,127 @@ const Inventory = () => {
         </div>
 
         {/* Sección 1: Stock Actual de Productos */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          {/* Header del contenedor */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
-            <div className="flex items-center space-x-2">
-              <Package className="h-5 w-5 text-gray-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Stock Actual de Productos</h2>
+        <div className="px-6 mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm max-w-[1400px]">
+            {/* Header del contenedor */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
+              <div className="flex items-center space-x-2">
+                <Package className="h-5 w-5 text-gray-600" />
+                <h2 className="text-lg font-semibold text-gray-900">Stock Actual de Productos</h2>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">Inventario actual generado automáticamente desde los movimientos</p>
             </div>
-            <p className="text-sm text-gray-500 mt-1">Inventario actual generado automáticamente desde los movimientos</p>
-          </div>
-          
-          {/* Tabla de stock actual */}
-          <div className="p-6">
-            <TableGlobal
-              data={filteredInventory}
-              columns={stockColumns}
-              emptyMessage={
-                searchTerm
-                  ? "No se encontraron productos con ese criterio de búsqueda"
-                  : "No hay productos en inventario"
-              }
-              pagination={{
-                enabled: true,
-                pageSize: 10,
-                pageSizeOptions: [5, 10, 20, 50],
-                showSizeChanger: true,
-                showTotal: true,
-              }}
-            />
+            
+            {/* Tabla de stock actual */}
+            <div className="p-6">
+              <TableGlobal
+                data={filteredInventory}
+                columns={stockColumns}
+                emptyMessage={
+                  searchTerm
+                    ? "No se encontraron productos con ese criterio de búsqueda"
+                    : "No hay productos en inventario"
+                }
+                pagination={{
+                  enabled: true,
+                  pageSize: 10,
+                  pageSizeOptions: [5, 10, 20, 50],
+                  showSizeChanger: true,
+                  showTotal: true,
+                }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Sección 2: Movimientos de Inventario */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          {/* Header del contenedor */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5 text-gray-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Movimientos de Inventario</h2>
+        <div className="px-6 mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm max-w-[1400px]">
+            {/* Header del contenedor */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <BarChart3 className="h-5 w-5 text-gray-600" />
+                  <h2 className="text-lg font-semibold text-gray-900">Movimientos de Inventario</h2>
+                </div>
+                <div className="flex space-x-2">
+                  <Button onClick={getDataMovements} size="sm" variant="outline">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Actualizar
+                  </Button>
+                  <Button onClick={() => {
+                    // Abrir modal de movimiento sin producto específico
+                    openMovementModal({
+                      id: 0,
+                      id_producto: 0,
+                      producto_nombre: '',
+                      categoria: '',
+                      cantidad: 0,
+                      estado: '',
+                      fecha_actualizacion: '',
+                      precio_venta: 0
+                    });
+                    setMovementForm({ cantidad: 0, precio_unitario: 0 });
+                  }} size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Nuevo Movimiento
+                  </Button>
+                </div>
               </div>
-              <div className="flex space-x-2">
-                <Button onClick={getDataMovements} size="sm" variant="outline">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  Actualizar
-                </Button>
-                <Button onClick={() => {
-                  // Abrir modal de movimiento sin producto específico
-                  openMovementModal({
-                    id: 0,
-                    id_producto: 0,
-                    producto_nombre: '',
-                    categoria: '',
-                    cantidad: 0,
-                    estado: '',
-                    fecha_actualizacion: '',
-                    precio_venta: 0
-                  });
-                  setMovementForm({ cantidad: 0, precio_unitario: 0 });
-                }} size="sm">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Nuevo Movimiento
-                </Button>
-              </div>
+              <p className="text-sm text-gray-500 mt-1">Gestiona el inventario registrando entradas y salidas de stock</p>
             </div>
-            <p className="text-sm text-gray-500 mt-1">Gestiona el inventario registrando entradas y salidas de stock</p>
-          </div>
-          
-          {/* Tabla de movimientos */}
-          <div className="p-6">
-            <TableGlobal
-              data={movements}
-              columns={movementsColumns}
-              emptyMessage="No hay movimientos registrados"
-              pagination={{
-                enabled: true,
-                pageSize: 10,
-                pageSizeOptions: [5, 10, 20, 50],
-                showSizeChanger: true,
-                showTotal: true,
-              }}
-            />
+            
+            {/* Tabla de movimientos */}
+            <div className="p-6">
+              <TableGlobal
+                data={movements}
+                columns={movementsColumns}
+                emptyMessage="No hay movimientos registrados"
+                pagination={{
+                  enabled: true,
+                  pageSize: 10,
+                  pageSizeOptions: [5, 10, 20, 50],
+                  showSizeChanger: true,
+                  showTotal: true,
+                }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Resumen en contenedor estilizado */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold" style={{ color: '#c9184a' }}>
-                {inventory.length}
-              </div>
-              <div className="text-sm" style={{ color: '#c9184a' }}>Productos en Inventario</div>
-              {searchTerm && (
-                <div className="text-xs text-gray-400 mt-1">
-                  {filteredInventory.length} filtrados
+        <div className="px-6 mt-6 mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 max-w-[1400px]">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold" style={{ color: '#c9184a' }}>
+                  {inventory.length}
                 </div>
-              )}
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold" style={{ color: '#218380' }}>
-                {inventory.reduce((acc, entry) => acc + entry.cantidad, 0)}
+                <div className="text-sm" style={{ color: '#c9184a' }}>Productos en Inventario</div>
+                {searchTerm && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    {filteredInventory.length} filtrados
+                  </div>
+                )}
               </div>
-              <div className="text-sm" style={{ color: '#218380' }}>Unidades Totales</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold" style={{ color: '#47126b' }}>
-                ${inventory.reduce((acc, entry) => acc + (entry.precio_venta || 0) * entry.cantidad, 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div className="text-center">
+                <div className="text-2xl font-bold" style={{ color: '#218380' }}>
+                  {inventory.reduce((acc, entry) => acc + entry.cantidad, 0)}
+                </div>
+                <div className="text-sm" style={{ color: '#218380' }}>Unidades Totales</div>
               </div>
-              <div className="text-sm" style={{ color: '#47126b' }}>Valor Total Inventario</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold" style={{ color: '#b9375e' }}>
-                {movements.length}
+              <div className="text-center">
+                <div className="text-2xl font-bold" style={{ color: '#47126b' }}>
+                  ${inventory.reduce((acc, entry) => acc + (entry.precio_venta || 0) * entry.cantidad, 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div className="text-sm" style={{ color: '#47126b' }}>Valor Total Inventario</div>
               </div>
-              <div className="text-sm" style={{ color: '#b9375e' }}>Movimientos Registrados</div>
+              <div className="text-center">
+                <div className="text-2xl font-bold" style={{ color: '#b9375e' }}>
+                  {movements.length}
+                </div>
+                <div className="text-sm" style={{ color: '#b9375e' }}>Movimientos Registrados</div>
+              </div>
             </div>
           </div>
         </div>
