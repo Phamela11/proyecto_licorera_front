@@ -65,7 +65,7 @@ const Inventory = () => {
         const selectedProduct = products.find((p: any) => p.id_producto === selectedProductId);
         if (selectedProduct) {
           // Usar id_proveedores o proveedores_ids (compatibilidad)
-          const proveedoresIds = selectedProduct.id_proveedores || selectedProduct.proveedores_ids || [];
+          const proveedoresIds = selectedProduct.id_proveedores || [];
           if (Array.isArray(proveedoresIds) && proveedoresIds.length > 0) {
             // Filtrar nulls/undefined
             const validIds = proveedoresIds.filter((id: any) => id !== null && id !== undefined);
@@ -104,9 +104,9 @@ const Inventory = () => {
     },
     {
       key: "precio_venta",
-      title: "Precio de Venta",
+      title: "Precio de Venta (con IVA)",
       align: "center",
-      width: "180px",
+      width: "200px",
       render: (precio: number) => (
         <span className="font-medium text-sm" style={{ color: '#218380' }}>
           ${Number(precio || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -262,8 +262,8 @@ const Inventory = () => {
               <DialogTitle>Nuevo Movimiento de Inventario</DialogTitle>
               <DialogDescription>
                 {newMovement.id_inventario === 0 
-                  ? "Registra una entrada o salida de stock. Se creará automáticamente la entrada de inventario si no existe."
-                  : "Registra una entrada o salida de stock para este producto."
+                  ? "Registra una entrada de stock. Se creará automáticamente la entrada de inventario si no existe."
+                  : "Registra una entrada de stock para este producto."
                 }
               </DialogDescription>
             </DialogHeader>
@@ -301,53 +301,32 @@ const Inventory = () => {
                 </div>
               )}
               <div className="grid gap-2">
-                <Label htmlFor="tipo_movimiento">Tipo de Movimiento *</Label>
+                <Label htmlFor="id_proveedor">
+                  Proveedor * 
+                  {selectedProductId && filteredProviders.length === 0 && (
+                    <span className="text-xs text-red-500 ml-2">(Este producto no tiene proveedores asignados)</span>
+                  )}
+                </Label>
                 <select
-                  id="tipo_movimiento"
-                  {...register('tipo_movimiento')}
-                  onChange={(e) => {
-                    setValue('tipo_movimiento', e.target.value);
-                    setNewMovement((prev) => ({ ...prev, tipo_movimiento: e.target.value as 'ENTRADA' | 'SALIDA' }));
-                    if (e.target.value === 'SALIDA') {
-                      setValue('id_proveedor', '');
-                      setSelectedProductId(null);
-                    }
-                  }}
+                  id="id_proveedor"
+                  {...register('id_proveedor')}
+                  disabled={!selectedProductId || filteredProviders.length === 0}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="ENTRADA">Entrada de Stock</option>
-                  <option value="SALIDA">Salida de Stock</option>
+                  <option value="">
+                    {!selectedProductId 
+                      ? "Primero selecciona un producto" 
+                      : filteredProviders.length === 0 
+                      ? "No hay proveedores para este producto"
+                      : "Selecciona un proveedor"}
+                  </option>
+                  {filteredProviders.map((provider: any) => (
+                    <option key={provider.id_proveedor} value={provider.id_proveedor}>
+                      {provider.nombre}
+                    </option>
+                  ))}
                 </select>
               </div>
-              {newMovement.tipo_movimiento === 'ENTRADA' && (
-                <div className="grid gap-2">
-                  <Label htmlFor="id_proveedor">
-                    Proveedor * 
-                    {selectedProductId && filteredProviders.length === 0 && (
-                      <span className="text-xs text-red-500 ml-2">(Este producto no tiene proveedores asignados)</span>
-                    )}
-                  </Label>
-                  <select
-                    id="id_proveedor"
-                    {...register('id_proveedor')}
-                    disabled={!selectedProductId || filteredProviders.length === 0}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">
-                      {!selectedProductId 
-                        ? "Primero selecciona un producto" 
-                        : filteredProviders.length === 0 
-                        ? "No hay proveedores para este producto"
-                        : "Selecciona un proveedor"}
-                    </option>
-                    {filteredProviders.map((provider: any) => (
-                      <option key={provider.id_proveedor} value={provider.id_proveedor}>
-                        {provider.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
               <div className="grid gap-2">
                 <Label htmlFor="cantidad">Cantidad *</Label>
                 <Input
@@ -363,7 +342,7 @@ const Inventory = () => {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="precio_unitario">Precio Unitario *</Label>
+                <Label htmlFor="precio_unitario">Precio Unitario (precio de compra sin IVA) *</Label>
                 <Input
                   id="precio_unitario"
                   type="number"
@@ -485,7 +464,7 @@ const Inventory = () => {
                   </Button>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-1">Gestiona el inventario registrando entradas y salidas de stock</p>
+              <p className="text-sm text-gray-500 mt-1">Gestiona el inventario registrando entradas de stock. Las salidas se registran automáticamente desde las ventas.</p>
             </div>
             
             {/* Tabla de movimientos */}

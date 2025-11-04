@@ -41,6 +41,7 @@ const Ventas = () => {
     isDeleteDialogOpen,
     saleToDelete,
     newSale,
+    currentUser, // Usuario logueado desde Zustand
     setIsModalOpen,
     setNewSale,
     setValue,
@@ -217,8 +218,8 @@ const Ventas = () => {
           setIsModalOpen(true);
         }
       }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle>
               {isEditMode ? "Editar Venta" : "Nueva Venta"}
             </DialogTitle>
@@ -230,158 +231,154 @@ const Ventas = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Cliente */}
-            <div className="grid gap-2">
-              <Label htmlFor="id_cliente">Cliente *</Label>
-              <Select
-                value={newSale.id_cliente > 0 ? newSale.id_cliente.toString() : ""}
-                onValueChange={(value: string) => {
-                  setNewSale((prev: any) => ({ ...prev, id_cliente: parseInt(value) }));
-                  setValue('id_cliente', parseInt(value));
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((cliente: any) => (
-                    <SelectItem key={cliente.id_cliente} value={cliente.id_cliente.toString()}>
-                      {cliente.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Usuario */}
-            <div className="grid gap-2">
-              <Label htmlFor="id_usuario">Usuario *</Label>
-              <Select
-                value={newSale.id_usuario > 0 ? newSale.id_usuario.toString() : ""}
-                onValueChange={(value: string) => {
-                  setNewSale((prev: any) => ({ ...prev, id_usuario: parseInt(value) }));
-                  setValue('id_usuario', parseInt(value));
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un usuario" />
-                </SelectTrigger>
-                <SelectContent>
-                  {usuarios.map((usuario: any) => (
-                    <SelectItem key={usuario.id_usuario} value={usuario.id_usuario.toString()}>
-                      {usuario.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Productos */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-lg font-semibold">Productos</Label>
-                {newSale.productos.length > 0 && (
-                  <Badge variant="secondary">{newSale.productos.length} producto(s) agregado(s)</Badge>
-                )}
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6 space-y-6 pb-4">
+              {/* Información del usuario logueado */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span className="text-blue-600 font-semibold text-sm">
+                      {currentUser?.nombre?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">
+                      Venta registrada por: <span className="font-bold">{currentUser?.nombre}</span>
+                    </p>
+                    <p className="text-xs text-blue-600">{currentUser?.correo}</p>
+                  </div>
+                </div>
               </div>
-              
-              {/* Agregar producto */}
-              <div className="flex gap-2">
+
+              {/* Cliente */}
+              <div className="grid gap-2">
+                <Label htmlFor="id_cliente">Cliente *</Label>
                 <Select
-                  value={selectedProductId > 0 ? selectedProductId.toString() : ""}
-                  onValueChange={(productId: string) => {
-                    setSelectedProductId(parseInt(productId));
+                  value={newSale.id_cliente > 0 ? newSale.id_cliente.toString() : ""}
+                  onValueChange={(value: string) => {
+                    setNewSale((prev: any) => ({ ...prev, id_cliente: parseInt(value) }));
+                    setValue('id_cliente', parseInt(value));
                   }}
                 >
-                  <SelectTrigger className="flex-1 h-10">
-                    <SelectValue placeholder="🔍 Buscar y agregar producto..." />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un cliente" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {productos.map((product: any) => (
-                      <SelectItem key={product.id_producto} value={product.id_producto.toString()}>
-                        <div className="flex justify-between items-center w-full">
-                          <span>{product.nombre}</span>
-                          <span className="ml-4 font-semibold text-green-600">{formatCurrency(product.precio_venta)}</span>
-                        </div>
+                  <SelectContent>
+                    {clientes.map((cliente: any) => (
+                      <SelectItem key={cliente.id_cliente} value={cliente.id_cliente.toString()}>
+                        {cliente.nombre}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 px-4 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
-                  onClick={() => {
-                    if (selectedProductId > 0) {
-                      addProductToSale(selectedProductId, 1);
-                      setSelectedProductId(0); // Vaciar el campo después de agregar
-                    }
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agregar
-                </Button>
               </div>
 
-              {/* Lista de productos seleccionados */}
-              <div className="space-y-2">
-                  {newSale.productos.map((productSale: any) => {
-                    const product = productos.find((p: any) => p.id_producto === productSale.id_producto);
-                    return (
-                      <div key={productSale.id_producto} className="flex items-center justify-between p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors shadow-sm">
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900">{product?.nombre}</div>
-                          <div className="text-xs text-gray-500 mt-0.5">{product?.tipo_licor_nombre}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">Precio unitario: {formatCurrency(productSale.precio_unitario)}</div>
+              {/* Productos */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-lg font-semibold">Productos</Label>
+                  {newSale.productos.length > 0 && (
+                    <Badge variant="secondary">{newSale.productos.length} producto(s) agregado(s)</Badge>
+                  )}
+                </div>
+                
+                {/* Agregar producto */}
+                <div className="flex gap-2">
+                  <Select
+                    value={selectedProductId > 0 ? selectedProductId.toString() : ""}
+                    onValueChange={(productId: string) => {
+                      setSelectedProductId(parseInt(productId));
+                    }}
+                  >
+                    <SelectTrigger className="flex-1 h-10">
+                      <SelectValue placeholder="🔍 Buscar y agregar producto..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {productos.map((product: any) => (
+                        <SelectItem key={product.id_producto} value={product.id_producto.toString()}>
+                          <div className="flex justify-between items-center w-full">
+                            <span>{product.nombre}</span>
+                            <span className="ml-4 font-semibold text-green-600">{formatCurrency(product.precio_venta)}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 px-4 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
+                    onClick={() => {
+                      if (selectedProductId > 0) {
+                        addProductToSale(selectedProductId, 1);
+                        setSelectedProductId(0); // Vaciar el campo después de agregar
+                      }
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Agregar
+                  </Button>
+                </div>
+
+                {/* Lista de productos seleccionados */}
+                <div className="space-y-2 max-h-[280px] overflow-y-auto pr-2 border rounded-md p-2">
+                    {newSale.productos.map((productSale: any) => {
+                      const product = productos.find((p: any) => p.id_producto === productSale.id_producto);
+                      return (
+                        <div key={productSale.id_producto} className="flex items-center justify-between p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors shadow-sm">
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900">{product?.nombre}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{product?.tipo_licor_nombre}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">Precio unitario: {formatCurrency(productSale.precio_unitario)}</div>
+                          </div>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm">Cantidad:</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={productSale.cantidad}
+                            onChange={(e) => {
+                              const cantidad = parseInt(e.target.value) || 1;
+                              setNewSale((prev: any) => ({
+                                ...prev,
+                                productos: prev.productos.map((p: any) => 
+                                  p.id_producto === productSale.id_producto 
+                                    ? { ...p, cantidad }
+                                    : p
+                                )
+                              }));
+                            }}
+                            className="w-20"
+                          />
+                          <span className="text-base font-bold text-green-600">
+                            {formatCurrency(productSale.cantidad * productSale.precio_unitario)}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeProductFromSale(productSale.id_producto)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-sm">Cantidad:</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={productSale.cantidad}
-                          onChange={(e) => {
-                            const cantidad = parseInt(e.target.value) || 1;
-                            setNewSale((prev: any) => ({
-                              ...prev,
-                              productos: prev.productos.map((p: any) => 
-                                p.id_producto === productSale.id_producto 
-                                  ? { ...p, cantidad }
-                                  : p
-                              )
-                            }));
-                          }}
-                          className="w-20"
-                        />
-                        <span className="text-base font-bold text-green-600">
-                          {formatCurrency(productSale.cantidad * productSale.precio_unitario)}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeProductFromSale(productSale.id_producto)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
 
-              {/* Total */}
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center text-lg font-semibold">
-                  <span>Total:</span>
-                  <span className="text-green-600">{formatCurrency(calculateTotal())}</span>
+                {/* Total */}
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center text-lg font-semibold">
+                    <span>Total:</span>
+                    <span className="text-green-600">{formatCurrency(calculateTotal())}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="px-6 py-4 border-t bg-gray-50">
               <Button type="button" variant="outline" onClick={handleCloseModal}>
                 Cancelar
               </Button>

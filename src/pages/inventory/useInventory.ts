@@ -61,6 +61,7 @@ export interface Product {
     id_producto: number;
     nombre: string;
     tipo_licor_nombre: string;
+    tipo_licor_iva?: number; // IVA del tipo de licor
     precio_venta: number;
     precio_compra?: number;
     id_proveedores?: number[]; // Array de IDs de proveedores
@@ -238,7 +239,6 @@ const useInventory = () => {
         
         // Resetear el formulario después de un breve delay para que se actualice
         setTimeout(() => {
-            setValue('tipo_movimiento', 'ENTRADA');
             setValue('cantidad', '');
             setValue('precio_unitario', inventoryEntry.precio_venta || 0);
             setValue('id_proveedor', '');
@@ -260,7 +260,7 @@ const useInventory = () => {
         console.log("Las entradas de inventario se crean automáticamente desde los movimientos");
     };
 
-    // Crear movimiento de inventario
+    // Crear movimiento de inventario (solo entradas)
     const onSubmitMovement = async (data: any) => {
         console.log(data);
         try {
@@ -268,8 +268,8 @@ const useInventory = () => {
             const productId = parseInt(data.id_producto);
             const cantidad = parseInt(data.cantidad);
             const precioUnitario = parseFloat(data.precio_unitario);
-            const tipoMovimiento = data.tipo_movimiento;
-            const idProveedor = tipoMovimiento === 'ENTRADA' ? parseInt(data.id_proveedor) : null;
+            const tipoMovimiento = 'ENTRADA'; // Siempre es entrada desde el formulario
+            const idProveedor = parseInt(data.id_proveedor);
             
             // Si no hay id_inventario (movimiento general), buscar o crear entrada de inventario
             if (inventoryId === 0 && productId) {
@@ -289,10 +289,10 @@ const useInventory = () => {
                 }
             }
             
-            // Crear el movimiento
+            // Crear el movimiento (siempre es ENTRADA)
             const movementData = {
                 id_inventario: inventoryId,
-                tipo_movimiento: tipoMovimiento,
+                tipo_movimiento: 'ENTRADA',
                 cantidad: cantidad,
                 precio_unitario: precioUnitario,
                 id_proveedor: idProveedor
@@ -300,26 +300,7 @@ const useInventory = () => {
             
             await createInventoryMovement(movementData);
             
-            // Actualizar la cantidad en inventario basada en el movimiento
-            const currentEntry = inventory.find(entry => entry.id === inventoryId);
-            if (currentEntry) {
-                let newCantidad = currentEntry.cantidad;
-                
-                if (tipoMovimiento === 'ENTRADA') {
-                    newCantidad += cantidad;
-                } else if (tipoMovimiento === 'SALIDA') {
-                    newCantidad -= cantidad;
-                }
-                
-                // Actualizar la entrada de inventario con la nueva cantidad
-                const updateData = {
-                    id: inventoryId,
-                    id_producto: productId,
-                    cantidad: Math.max(0, newCantidad) // No permitir cantidades negativas
-                };
-                
-                await updateInventoryEntry(updateData);
-            }
+            // El backend actualiza automáticamente el inventario
             
             toast.success("Movimiento de inventario registrado exitosamente");
             
@@ -334,7 +315,6 @@ const useInventory = () => {
             setIsMovementModalOpen(false);
             
             // Resetear el formulario
-            setValue('tipo_movimiento', 'ENTRADA');
             setValue('cantidad', '');
             setValue('precio_unitario', 0);
             setValue('id_producto', '');

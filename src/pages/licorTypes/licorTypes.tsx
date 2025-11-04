@@ -48,7 +48,16 @@ const LicorTypes = () => {
     {
       key: "nombre",
       title: "Nombre",
-      width: "300px",
+      width: "250px",
+    },
+    {
+      key: "iva",
+      title: "IVA (%)",
+      width: "100px",
+      align: "center",
+      render: (iva: number) => (
+        <span className="font-medium text-blue-600">{iva}%</span>
+      ),
     },
     {
       key: "actions",
@@ -98,14 +107,25 @@ const LicorTypes = () => {
               </DialogTitle>
               <DialogDescription>
                 {isEditMode
-                  ? "Modifica el nombre del tipo de licor."
-                  : "Ingresa el nombre del tipo de licor a crear."}
+                  ? "Modifica el nombre y el IVA del tipo de licor."
+                  : "Ingresa el nombre y el IVA del tipo de licor a crear."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="nombre">Nombre *</Label>
                 <Input id="nombre" placeholder="Ej: Ron" {...register("nombre")} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="iva">IVA (%) *</Label>
+                <Input 
+                  id="iva" 
+                  type="number" 
+                  min="0" 
+                  max="100" 
+                  placeholder="Ej: 19" 
+                  {...register("iva")} 
+                />
               </div>
             </div>
             <DialogFooter>

@@ -76,6 +76,17 @@ const Products = () => {
       ),
     },
     {
+      key: "utilidad",
+      title: "Utilidad",
+      align: "center",
+      width: "100px",
+      render: (utilidad: number) => (
+        <span className="font-medium text-purple-600">
+          {Number(utilidad).toFixed(0)}%
+        </span>
+      ),
+    },
+    {
       key: "precio_venta",
       title: "Precio Venta",
       align: "center",
@@ -165,11 +176,18 @@ const Products = () => {
                   id="id_tipo_licor"
                   defaultValue={newProduct.id_tipo_licor || ""}
                   {...register('id_tipo_licor')}
+                  onChange={(e) => {
+                    const tipoLicorId = parseInt(e.target.value) || 0;
+                    setNewProduct(prev => ({ ...prev, id_tipo_licor: tipoLicorId }));
+                    setValue('id_tipo_licor', e.target.value);
+                  }}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">Selecciona el tipo de licor</option>
                   {licorTypes.map((licorType) => (
-                    <option key={licorType.id_tipo_licor} value={licorType.id_tipo_licor}>{licorType.nombre}</option>
+                    <option key={licorType.id_tipo_licor} value={licorType.id_tipo_licor}>
+                      {licorType.nombre} (IVA: {licorType.iva}%)
+                    </option>
                   ))}
                 </select>
               </div>
@@ -239,7 +257,7 @@ const Products = () => {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="precio_compra">Precio de Compra *</Label>
+                <Label htmlFor="precio_compra">Precio de Compra (sin IVA) *</Label>
                 <Input
                   id="precio_compra"
                   type="number"
@@ -248,10 +266,58 @@ const Products = () => {
                   defaultValue={newProduct.precio_compra}
                   {...register('precio_compra')}
                   placeholder="0.00"
+                  onChange={(e) => {
+                    const precioCompra = parseFloat(e.target.value) || 0;
+                    setNewProduct(prev => ({ ...prev, precio_compra: precioCompra }));
+                  }}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="precio_venta">Precio de Venta *</Label>
+                <Label htmlFor="utilidad">Utilidad (%) *</Label>
+                <Input
+                  id="utilidad"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1000"
+                  defaultValue={newProduct.utilidad}
+                  {...register('utilidad')}
+                  placeholder="Ej: 20"
+                  onChange={(e) => {
+                    const utilidad = parseFloat(e.target.value) || 0;
+                    setNewProduct(prev => ({ ...prev, utilidad }));
+                  }}
+                />
+                <p className="text-xs text-gray-500">
+                  Porcentaje de ganancia sobre el precio de compra
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="precio_venta">
+                  Precio de Venta (con IVA) *
+                  {newProduct.id_tipo_licor > 0 && newProduct.precio_compra > 0 && newProduct.utilidad >= 0 && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="ml-2 h-auto p-0 text-xs"
+                      onClick={() => {
+                        const tipoLicor = licorTypes.find(lt => lt.id_tipo_licor === newProduct.id_tipo_licor);
+                        if (tipoLicor && newProduct.precio_compra > 0) {
+                          // Calcular: (precio_compra + utilidad) * (1 + iva)
+                          const utilidadDecimal = newProduct.utilidad / 100;
+                          const ivaDecimal = tipoLicor.iva / 100;
+                          const precioConUtilidad = newProduct.precio_compra * (1 + utilidadDecimal);
+                          const precioFinal = precioConUtilidad * (1 + ivaDecimal);
+                          setValue('precio_venta', precioFinal.toFixed(2));
+                          setNewProduct(prev => ({ ...prev, precio_venta: precioFinal }));
+                        }
+                      }}
+                    >
+                      Calcular Automático
+                    </Button>
+                  )}
+                </Label>
                 <Input
                   id="precio_venta"
                   type="number"
@@ -261,6 +327,16 @@ const Products = () => {
                   {...register('precio_venta')}
                   placeholder="0.00"
                 />
+                {newProduct.id_tipo_licor > 0 && (
+                  <p className="text-xs text-gray-500">
+                    IVA del tipo de licor: {licorTypes.find(lt => lt.id_tipo_licor === newProduct.id_tipo_licor)?.iva || 0}%
+                    {newProduct.precio_compra > 0 && newProduct.utilidad > 0 && (
+                      <span className="ml-2 text-blue-600 font-medium">
+                        | Fórmula: (${newProduct.precio_compra.toFixed(2)} + {newProduct.utilidad}%) × (1 + {licorTypes.find(lt => lt.id_tipo_licor === newProduct.id_tipo_licor)?.iva || 0}%)
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
             </div>
             <DialogFooter>

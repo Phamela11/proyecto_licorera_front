@@ -12,17 +12,20 @@ import {
 interface LicorTypeFromAPI {
   id_tipo_licor: number;
   nombre: string;
+  iva: number;
 }
 
 // Tipos usados en el frontend
 export interface LicorType {
   id: number;
   nombre: string;
+  iva: number;
 }
 
 const mapFromAPI = (api: LicorTypeFromAPI): LicorType => ({
   id: api.id_tipo_licor,
   nombre: api.nombre,
+  iva: api.iva || 0,
 });
 
 const useLicorTypes = () => {
@@ -70,16 +73,22 @@ const useLicorTypes = () => {
     setIsEditMode(true);
     setEditingId(licorType.id);
     setValue("nombre", licorType.nombre);
+    setValue("iva", licorType.iva);
     setIsModalOpen(true);
   };
 
   const onSubmit = async (data: any) => {
     try {
+      console.log("data", data.iva);
+      data.iva = parseInt(data.iva) || 0;
+      console.log("iva", data.iva);
       if (isEditMode && editingId) {
-        await updateLicorType({ id: editingId, nombre: data.nombre });
+
+        console.log("data", data);
+        await updateLicorType({ id: editingId, nombre: data.nombre, iva: data.iva });
         toast.success("Tipo de licor actualizado");
       } else {
-        await createLicorType({ nombre: data.nombre });
+        await createLicorType({ nombre: data.nombre, iva: data.iva });
         toast.success("Tipo de licor creado");
       }
       setIsModalOpen(false);

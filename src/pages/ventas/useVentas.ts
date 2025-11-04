@@ -5,6 +5,7 @@ import { createSale, getSales, updateSale, deleteSale } from "../../core/service
 import { getClients } from "../../core/services/clients.service";
 import { getProducts } from "../../core/services/products.service";
 import { getUsers } from "../../core/services/users.service";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Función para formatear fecha
 const formatDate = (dateString: string): string => {
@@ -106,6 +107,9 @@ const mapSaleFromAPI = (apiSale: SaleFromAPI, clientes: Cliente[], usuarios: Usu
 };
 
 export const useVentas = () => {
+    // Obtener el usuario logueado desde Zustand
+    const currentUser = useAuthStore((state) => state.user);
+    
     const [ventas, setVentas] = useState<Sale[]>([]);
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -122,7 +126,7 @@ export const useVentas = () => {
 
     const [newSale, setNewSale] = useState({
         id_cliente: 0,
-        id_usuario: 0,
+        id_usuario: currentUser?.id_usuario || 0, // Obtener automáticamente del usuario logueado
         productos: [] as Array<{
             id_producto: number;
             cantidad: number;
@@ -228,7 +232,7 @@ export const useVentas = () => {
         setEditingSaleId(null);
         setNewSale({
             id_cliente: 0,
-            id_usuario: 0,
+            id_usuario: currentUser?.id_usuario || 0, // Establecer automáticamente el usuario logueado
             productos: []
         });
         reset();
@@ -261,7 +265,7 @@ export const useVentas = () => {
         setEditingSaleId(null);
         setNewSale({
             id_cliente: 0,
-            id_usuario: 0,
+            id_usuario: currentUser?.id_usuario || 0, // Restablecer con el usuario logueado
             productos: []
         });
         reset();
@@ -322,11 +326,14 @@ export const useVentas = () => {
             return;
         }
         
-        // Validar que hay un usuario seleccionado
-        if (!newSale.id_usuario || newSale.id_usuario === 0) {
-            toast.error("Debes seleccionar un usuario");
+        // Validar que hay un usuario logueado
+        if (!currentUser?.id_usuario) {
+            toast.error("No se puede crear la venta sin un usuario logueado");
             return;
         }
+        
+        // Usar siempre el usuario logueado (seguridad)
+        const id_usuario = currentUser.id_usuario;
         
         const totalCalculado = calculateTotal();
         
@@ -343,7 +350,7 @@ export const useVentas = () => {
                     ...data,
                     id: editingSaleId,
                     id_cliente: parseInt(newSale.id_cliente.toString()),
-                    id_usuario: parseInt(newSale.id_usuario.toString()),
+                    id_usuario: id_usuario, // Usar siempre el usuario logueado
                     productos: newSale.productos,
                     total: totalCalculado,
                     fecha: data.fecha || new Date().toISOString().split('T')[0]
@@ -356,7 +363,7 @@ export const useVentas = () => {
                 // Crear nueva venta
                 const createData = {
                     id_cliente: parseInt(newSale.id_cliente.toString()),
-                    id_usuario: parseInt(newSale.id_usuario.toString()),
+                    id_usuario: id_usuario, // Usar siempre el usuario logueado
                     productos: newSale.productos,
                     total: totalCalculado,
                     fecha: data.fecha || new Date().toISOString().split('T')[0] // Fecha actual
@@ -409,6 +416,7 @@ export const useVentas = () => {
         isDeleteDialogOpen,
         saleToDelete,
         newSale,
+        currentUser, // Exportar el usuario logueado
         setIsModalOpen,
         setNewSale,
         setValue,

@@ -36,6 +36,7 @@ const mapProductFromAPI = (apiProduct: ProductFromAPI, licorTypes: LicorType[], 
         proveedores_nombres: proveedoresNombres,
         precio_compra: Number(apiProduct.precio_compra) || 0,
         precio_venta: Number(apiProduct.precio_venta) || 0,
+        utilidad: Number(apiProduct.utilidad) || 0,
         fecha: formatDate(apiProduct.fecha)
     };
 };
@@ -50,6 +51,7 @@ interface ProductFromAPI {
     proveedores_ids?: number[]; // Array de IDs de proveedores
     precio_compra: number;
     precio_venta: number;
+    utilidad: number; // Porcentaje de utilidad
     fecha: string;
 }
 
@@ -63,6 +65,7 @@ export interface Product {
     proveedores_nombres: string; // Nombres de todos los proveedores
     precio_compra: number;
     precio_venta: number;
+    utilidad: number; // Porcentaje de utilidad
     fecha: string;
 }
 
@@ -70,6 +73,7 @@ export interface Product {
 export interface LicorType {
     id_tipo_licor: number;
     nombre: string;
+    iva: number;
 }
 
 // Interfaz para proveedor
@@ -94,6 +98,7 @@ const useProducts = () => {
       id_proveedores: [] as number[],
       precio_compra: 0,
       precio_venta: 0,
+      utilidad: 0,
       fecha: "",
     });
 
@@ -179,6 +184,7 @@ const useProducts = () => {
             id_proveedores: [],
             precio_compra: 0,
             precio_venta: 0,
+            utilidad: 0,
             fecha: "",
         });
         setIsModalOpen(true);
@@ -194,6 +200,7 @@ const useProducts = () => {
             id_proveedores: product.id_proveedores || [],
             precio_compra: product.precio_compra,
             precio_venta: product.precio_venta,
+            utilidad: product.utilidad,
             fecha: product.fecha,
         });
         // Establecer valores en el formulario
@@ -202,6 +209,7 @@ const useProducts = () => {
         setValue('id_proveedores', product.id_proveedores || []);
         setValue('precio_compra', product.precio_compra);
         setValue('precio_venta', product.precio_venta);
+        setValue('utilidad', product.utilidad);
         setIsModalOpen(true);
     };
 
@@ -221,7 +229,8 @@ const useProducts = () => {
                             ? data.id_proveedores.map((id: any) => parseInt(id)).filter((id: number) => !isNaN(id))
                             : [],
                     precio_compra: parseFloat(data.precio_compra),
-                    precio_venta: parseFloat(data.precio_venta)
+                    precio_venta: parseFloat(data.precio_venta),
+                    utilidad: parseFloat(data.utilidad) || 0
                 };
                 
                 await updateProduct(updateData);
@@ -237,7 +246,8 @@ const useProducts = () => {
                             ? data.id_proveedores.map((id: any) => parseInt(id)).filter((id: number) => !isNaN(id))
                             : [],
                     precio_compra: parseFloat(data.precio_compra),
-                    precio_venta: parseFloat(data.precio_venta)
+                    precio_venta: parseFloat(data.precio_venta),
+                    utilidad: parseFloat(data.utilidad) || 0
                 };
                 await createProduct(createData);
                 toast.success("Producto creado exitosamente");
@@ -251,6 +261,7 @@ const useProducts = () => {
                 id_proveedores: [],
                 precio_compra: 0,
                 precio_venta: 0,
+                utilidad: 0,
                 fecha: "",
             });
             setIsModalOpen(false);
