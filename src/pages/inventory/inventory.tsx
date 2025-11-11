@@ -159,7 +159,7 @@ const Inventory = () => {
     },
     {
       key: "proveedor_nombre",
-      title: "Proveedor",
+      title: "Proveedor", 
       width: "180px",
       align: "center",
       render: (proveedor: string, record: InventoryMovement) => {

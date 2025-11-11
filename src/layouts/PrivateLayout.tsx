@@ -68,7 +68,7 @@ export default function PrivateLayout() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-lg text-gray-300">
-              Bienvenido, {JSON.parse(localStorage.getItem('user') || '{}')?.user_metadata?.email || 'Usuario'}
+              Bienvenido, {JSON.parse(localStorage.getItem('user') || '{}')?.nombre || 'Usuario'}
             </span>
           </div>
         </header>

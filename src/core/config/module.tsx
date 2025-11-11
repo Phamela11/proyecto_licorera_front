@@ -9,7 +9,8 @@ import {
     UserCircle,
     ShoppingCart,
     GlassWater,
-    Truck
+    Truck,
+    Clock
   } from "lucide-react";
   
   export interface Module {
@@ -87,13 +88,20 @@ import {
     },
     {
       id: 10,
+      name: 'Registro Horas',
+      path: '/registro-horas',
+      icon: Clock,
+      roles: ['admin']
+    },
+    {
+      id: 11,
       name: 'Nómina',
       path: '/nomina',
       icon: DollarSign,
       roles: ['admin']
     },
     {
-      id: 11,
+      id: 12,
       name: 'Configuración',
       path: '/configuracion',
       icon: Settings,

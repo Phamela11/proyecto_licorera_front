@@ -16,6 +16,7 @@ const Providers = lazy(() => import('@/pages/providers/providers'));
 const Inventory = lazy(() => import('@/pages/inventory/inventory'));
 const Ventas = lazy(() => import('@/pages/ventas/ventas'));
 const Reports = lazy(() => import('@/pages/reports/reports'));
+const TimeRecords = lazy(() => import('@/pages/timeRecords/timeRecords'));
 export const appRoutes: RouteObject[] = [
   // Rutas de autenticación
   {
@@ -63,6 +64,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: 'reportes',
         element: <Reports />
+      },
+      {
+        path: 'registro-horas',
+        element: <TimeRecords />
       }
     ]
   },
