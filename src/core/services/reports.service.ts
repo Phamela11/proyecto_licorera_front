@@ -23,9 +23,9 @@ export const getSalesByPeriod = async (days: number = 30) => {
 };
 
 // Obtener top productos más vendidos
-export const getTopProducts = async (limit: number = 10) => {
+export const getTopProducts = async (limit: number = 10, periodo: string = 'mensual') => {
     try {
-        const response = await api.get(`/reports/top-products?limit=${limit}`);
+        const response = await api.get(`/reports/top-products?limit=${limit}&periodo=${periodo}`);
         return response.data;
     } catch (error) {
         console.error(error);

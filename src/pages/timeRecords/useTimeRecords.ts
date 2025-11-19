@@ -49,6 +49,7 @@ const mapTimeRecordFromAPI = (apiRecord: TimeRecordFromAPI): TimeRecord => ({
     empleado_id: apiRecord.id_empleado,
     entrada: formatTime(apiRecord.hora_entrada),
     salida: formatTime(apiRecord.hora_salida),
+    descanso: apiRecord.descanso || 0,
     horas: formatHours(apiRecord.horas_trabajadas),
     estado: apiRecord.estado,
     observaciones: apiRecord.observaciones
@@ -62,6 +63,7 @@ interface TimeRecordFromAPI {
     empleado_nombre: string;
     hora_entrada: string | null;
     hora_salida: string | null;
+    descanso: number | null;
     horas_trabajadas: number | null;
     estado: string;
     observaciones?: string;
@@ -76,6 +78,7 @@ export interface TimeRecord {
     empleado_id: number;
     entrada: string;
     salida: string;
+    descanso: number;
     horas: string;
     estado: string;
     observaciones?: string;
@@ -94,6 +97,7 @@ const useTimeRecords = () => {
         empleado_id: "",
         entrada: "",
         salida: "",
+        descanso: "0",
         observaciones: "",
     });
     const { register, handleSubmit: handleSubmitForm, reset, setValue } = useForm();
@@ -139,6 +143,7 @@ const useTimeRecords = () => {
             empleado_id: "",
             entrada: "",
             salida: "",
+            descanso: "0",
             observaciones: "",
         });
         setIsModalOpen(true);
@@ -148,11 +153,15 @@ const useTimeRecords = () => {
     const openEditModal = (record: TimeRecord) => {
         setIsEditMode(true);
         setEditingRecordId(record.id);
+        
+        const descansoValue = record.descanso !== null && record.descanso !== undefined ? record.descanso : 0;
+        
         setNewRecord({
             fecha: record.fecha_raw,
             empleado_id: record.empleado_id.toString(),
             entrada: record.entrada === '-' ? '' : record.entrada,
             salida: record.salida === '-' ? '' : record.salida,
+            descanso: descansoValue.toString(),
             observaciones: record.observaciones || "",
         });
         
@@ -160,6 +169,7 @@ const useTimeRecords = () => {
         setValue('empleado_id', record.empleado_id);
         setValue('entrada', record.entrada === '-' ? '' : record.entrada);
         setValue('salida', record.salida === '-' ? '' : record.salida);
+        setValue('descanso', descansoValue);
         setValue('observaciones', record.observaciones || '');
         setIsModalOpen(true);
     };
@@ -178,6 +188,7 @@ const useTimeRecords = () => {
                 empleado_id: Number(data.empleado_id),
                 hora_entrada: data.entrada,
                 hora_salida: data.salida || null,
+                descanso: Number(data.descanso) || 0,
                 observaciones: data.observaciones || null
             };
 
@@ -195,6 +206,7 @@ const useTimeRecords = () => {
                 empleado_id: "",
                 entrada: "",
                 salida: "",
+                descanso: "0",
                 observaciones: "",
             });
             setIsModalOpen(false);

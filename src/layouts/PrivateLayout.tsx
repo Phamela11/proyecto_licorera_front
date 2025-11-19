@@ -13,7 +13,8 @@ export default function PrivateLayout() {
   useEffect(() => {
     // Obtener el rol del usuario desde localStorage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userRole = user?.user_metadata?.role || 'admin';
+    // El backend devuelve el rol como 'rol', y puede ser 'administrador' o 'cajero'
+    const userRole = user?.rol === 'administrador' ? 'admin' : (user?.rol || 'admin');
     
     // Obtener módulos según el rol del usuario
     const modules = getModulesByRole(userRole);
@@ -21,9 +22,21 @@ export default function PrivateLayout() {
 
     // Determinar el módulo activo basado en la ruta actual
     const currentPath = location.pathname;
+    
+    // Verificar si la ruta actual está permitida para el rol del usuario
+    const isRouteAllowed = modules.some((module: any) => 
+      currentPath === module.path || currentPath.startsWith(module.path + '/')
+    );
+    
+    // Si la ruta no está permitida y hay módulos disponibles, redirigir al primero
+    if (!isRouteAllowed && modules.length > 0) {
+      navigate(modules[0].path, { replace: true });
+      return;
+    }
+    
     const activeModuleId = modules.find((module: any) => 
-      currentPath.includes(module.path)
-    )?.id || 1;
+      currentPath === module.path || currentPath.startsWith(module.path + '/')
+    )?.id || (modules.length > 0 ? modules[0].id : 1);
     
     setActiveModule(activeModuleId);
     
@@ -38,7 +51,7 @@ export default function PrivateLayout() {
         }
       });
     }, 100);
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   const handleModuleClick = (moduleId: number, path?: string) => {
     setActiveModule(moduleId);

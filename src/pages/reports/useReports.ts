@@ -10,6 +10,7 @@ import {
     getSalesByLicorType,
     getProfitAnalysis
 } from '@/core/services/reports.service';
+import { getCostosOperativos } from '@/core/services/costosOperativos.service';
 
 export const useReports = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +23,8 @@ export const useReports = () => {
     const [salesByLicorType, setSalesByLicorType] = useState<any[]>([]);
     const [profitAnalysis, setProfitAnalysis] = useState<any[]>([]);
     const [selectedPeriod, setSelectedPeriod] = useState(30);
+    const [costosOperativos, setCostosOperativos] = useState<any[]>([]);
+    const [productosPeriodo, setProductosPeriodo] = useState<'diario' | 'semanal' | 'mensual'>('mensual');
 
     // Cargar estadísticas del dashboard
     const loadDashboardStats = async () => {
@@ -46,14 +49,20 @@ export const useReports = () => {
     };
 
     // Cargar top productos
-    const loadTopProducts = async () => {
+    const loadTopProducts = async (periodo: string = 'mensual') => {
         try {
-            const response = await getTopProducts(10);
+            const response = await getTopProducts(4, periodo);
             setTopProducts(response.data);
         } catch (error) {
             console.error('Error al cargar productos:', error);
             toast.error('Error al cargar productos más vendidos');
         }
+    };
+
+    // Cambiar período de productos
+    const handleProductosPeriodoChange = async (periodo: 'diario' | 'semanal' | 'mensual') => {
+        setProductosPeriodo(periodo);
+        await loadTopProducts(periodo);
     };
 
     // Cargar ventas por cliente
@@ -111,6 +120,35 @@ export const useReports = () => {
         }
     };
 
+    // Cargar costos operativos del mes actual
+    const loadCostosOperativos = async () => {
+        try {
+            const now = new Date();
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            const fecha_inicio = firstDayOfMonth.toISOString().split('T')[0];
+            const fecha_fin = lastDayOfMonth.toISOString().split('T')[0];
+            
+            const response = await getCostosOperativos({
+                fecha_inicio,
+                fecha_fin
+            });
+            // El servicio retorna { success, message, total, data }
+            // response es el objeto completo, response.data es el array de costos
+            const costosArray = (response && response.data && Array.isArray(response.data)) 
+                ? response.data 
+                : [];
+            setCostosOperativos(costosArray);
+        } catch (error: any) {
+            // Silenciar el error para no mostrar en consola, solo dejar array vacío
+            if (error?.response?.status !== 404) {
+                console.error('Error al cargar costos operativos:', error);
+            }
+            setCostosOperativos([]);
+        }
+    };
+
     // Cargar todos los datos
     const loadAllData = async () => {
         setIsLoading(true);
@@ -118,12 +156,13 @@ export const useReports = () => {
             await Promise.all([
                 loadDashboardStats(),
                 loadSalesByPeriod(selectedPeriod),
-                loadTopProducts(),
+                loadTopProducts(productosPeriodo),
                 loadSalesByClient(),
                 loadInventoryStatus(),
                 loadSalesByUser(),
                 loadSalesByLicorType(),
-                loadProfitAnalysis()
+                loadProfitAnalysis(),
+                loadCostosOperativos()
             ]);
         } catch (error) {
             console.error('Error al cargar datos:', error);
@@ -143,6 +182,17 @@ export const useReports = () => {
         loadAllData();
     }, []);
 
+    // Calcular métricas financieras
+    const ingresosTotales = dashboardStats?.monto_total_ventas || 0;
+    const totalCostosOperativos = Array.isArray(costosOperativos) 
+        ? costosOperativos.reduce((sum, costo) => {
+            const monto = typeof costo.monto === 'string' ? parseFloat(costo.monto) : (costo.monto || 0);
+            return sum + (isNaN(monto) ? 0 : monto);
+          }, 0)
+        : 0;
+    const gananciaNeta = ingresosTotales - totalCostosOperativos;
+    const margenGanancia = ingresosTotales > 0 ? ((gananciaNeta / ingresosTotales) * 100) : 0;
+
     return {
         isLoading,
         dashboardStats,
@@ -155,7 +205,15 @@ export const useReports = () => {
         profitAnalysis,
         selectedPeriod,
         handlePeriodChange,
-        loadAllData
+        loadAllData,
+        // Métricas financieras
+        ingresosTotales,
+        totalCostosOperativos,
+        gananciaNeta,
+        margenGanancia,
+        // Productos
+        productosPeriodo,
+        handleProductosPeriodoChange
     };
 };
 

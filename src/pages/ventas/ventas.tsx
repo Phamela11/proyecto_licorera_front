@@ -101,11 +101,50 @@ const Ventas = () => {
       key: "productos",
       title: "Productos",
       width: "200px",
-      render: (productos: any[]) => (
-        <div className="text-sm text-gray-600">
-          {productos.length} producto{productos.length !== 1 ? 's' : ''}
-        </div>
-      ),
+      render: (productos: any, record: Sale) => {
+        // Manejar diferentes formatos de productos
+        let productosArray: any[] = [];
+        
+        // Si productos es un array, usarlo directamente
+        if (Array.isArray(productos)) {
+          productosArray = productos;
+        }
+        // Si productos es un string JSON, parsearlo
+        else if (typeof productos === 'string') {
+          try {
+            productosArray = JSON.parse(productos);
+          } catch (e) {
+            console.error('Error al parsear productos:', e);
+            productosArray = [];
+          }
+        }
+        // Si no, intentar obtener desde record
+        else if (Array.isArray(record?.productos)) {
+          productosArray = record.productos;
+        }
+        // Si record.productos es un string, parsearlo
+        else if (typeof record?.productos === 'string') {
+          try {
+            productosArray = JSON.parse(record.productos);
+          } catch (e) {
+            console.error('Error al parsear productos desde record:', e);
+            productosArray = [];
+          }
+        }
+        
+        // Debug temporal - remover después de verificar
+        if (productosArray.length === 0 && (productos || record?.productos)) {
+          console.log('Debug productos - productos:', productos, 'record.productos:', record?.productos, 'tipo productos:', typeof productos, 'tipo record.productos:', typeof record?.productos);
+        }
+        
+        const cantidad = productosArray.length;
+        
+        return (
+          <div className="text-sm text-gray-600">
+            {cantidad} producto{cantidad !== 1 ? 's' : ''}
+          </div>
+        );
+      },
     },
     {
       key: "actions",
@@ -334,24 +373,63 @@ const Ventas = () => {
                         <div className="flex items-center gap-2">
                           <Label className="text-sm">Cantidad:</Label>
                           <Input
-                            type="number"
-                            min="1"
-                            value={productSale.cantidad}
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={productSale.cantidad === 0 ? '' : productSale.cantidad.toString()}
                             onChange={(e) => {
-                              const cantidad = parseInt(e.target.value) || 1;
-                              setNewSale((prev: any) => ({
-                                ...prev,
-                                productos: prev.productos.map((p: any) => 
-                                  p.id_producto === productSale.id_producto 
-                                    ? { ...p, cantidad }
-                                    : p
-                                )
-                              }));
+                              const inputValue = e.target.value.trim();
+                              
+                              // Permitir campo vacío mientras el usuario escribe
+                              if (inputValue === '') {
+                                setNewSale((prev: any) => ({
+                                  ...prev,
+                                  productos: prev.productos.map((p: any) => 
+                                    p.id_producto === productSale.id_producto 
+                                      ? { ...p, cantidad: 0 }
+                                      : p
+                                  )
+                                }));
+                                return;
+                              }
+                              
+                              // Solo permitir números
+                              if (!/^\d+$/.test(inputValue)) {
+                                return;
+                              }
+                              
+                              const cantidad = parseInt(inputValue, 10);
+                              // Solo actualizar si es un número válido y mayor a 0
+                              if (!isNaN(cantidad) && cantidad > 0) {
+                                setNewSale((prev: any) => ({
+                                  ...prev,
+                                  productos: prev.productos.map((p: any) => 
+                                    p.id_producto === productSale.id_producto 
+                                      ? { ...p, cantidad }
+                                      : p
+                                  )
+                                }));
+                              }
+                            }}
+                            onBlur={(e) => {
+                              // Cuando el usuario sale del campo, asegurar que tenga al menos 1
+                              const inputValue = e.target.value.trim();
+                              const cantidad = parseInt(inputValue, 10);
+                              if (inputValue === '' || isNaN(cantidad) || cantidad < 1) {
+                                setNewSale((prev: any) => ({
+                                  ...prev,
+                                  productos: prev.productos.map((p: any) => 
+                                    p.id_producto === productSale.id_producto 
+                                      ? { ...p, cantidad: 1 }
+                                      : p
+                                  )
+                                }));
+                              }
                             }}
                             className="w-20"
                           />
                           <span className="text-base font-bold text-green-600">
-                            {formatCurrency(productSale.cantidad * productSale.precio_unitario)}
+                            {formatCurrency((productSale.cantidad || 1) * productSale.precio_unitario)}
                           </span>
                           <Button
                             type="button"

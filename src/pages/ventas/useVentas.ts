@@ -94,6 +94,19 @@ const mapSaleFromAPI = (apiSale: SaleFromAPI, clientes: Cliente[], usuarios: Usu
     const cliente = clientes.find(c => c.id_cliente === apiSale.id_cliente);
     const usuario = usuarios.find(u => u.id_usuario === apiSale.id_usuario);
     
+    // Asegurar que productos sea un array
+    let productosArray: any[] = [];
+    if (Array.isArray(apiSale.productos)) {
+        productosArray = apiSale.productos;
+    } else if (typeof apiSale.productos === 'string') {
+        try {
+            productosArray = JSON.parse(apiSale.productos);
+        } catch (e) {
+            console.error('Error al parsear productos en mapSaleFromAPI:', e);
+            productosArray = [];
+        }
+    }
+    
     return {
         id: apiSale.id_venta,
         id_cliente: apiSale.id_cliente,
@@ -102,7 +115,7 @@ const mapSaleFromAPI = (apiSale: SaleFromAPI, clientes: Cliente[], usuarios: Usu
         total: Number(apiSale.total) || 0,
         cliente_nombre: cliente?.nombre || 'Cliente no encontrado',
         usuario_nombre: apiSale.usuario_nombre || usuario?.nombre || 'Usuario no encontrado',
-        productos: apiSale.productos || []
+        productos: productosArray
     };
 };
 

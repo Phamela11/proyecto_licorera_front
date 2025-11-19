@@ -1,13 +1,48 @@
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { DollarSign, Package, Users, AlertTriangle, RefreshCw } from 'lucide-react';
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { DollarSign, RefreshCw, TrendingUp, Percent, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useReports } from './useReports';
 
-// Colores para las gráficas
-const COLORS = ['#b9375e', '#218380', '#47126b', '#c9184a', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f7b731'];
+// Función para obtener colores específicos por estado de inventario
+const getEstadoInventarioStyles = (estado: string) => {
+  const estadoUpper = estado?.toUpperCase();
+  
+  switch (estadoUpper) {
+    case "BAJO":
+      return {
+        backgroundColor: "#f8d7da",
+        color: "#842029",
+        hoverColor: "#f5c2c7",
+        label: "Bajo"
+      };
+    case "MEDIO":
+      return {
+        backgroundColor: "#fcefb4",
+        color: "#c36f09",
+        hoverColor: "#f9e79f",
+        label: "Medio"
+      };
+    case "ALTO":
+      return {
+        backgroundColor: "#d1e7dd",
+        color: "#0a5827",
+        hoverColor: "#badbcc",
+        label: "Alto"
+      };
+    default:
+      return {
+        backgroundColor: "#e5e7eb",
+        color: "#374151",
+        hoverColor: "#d1d5db",
+        label: estado || "Sin estado"
+      };
+  }
+};
+
+// Colores para las gráficas - Paleta del proyecto
+const COLORS = ['#c9184a', '#218380', '#8f2d56', '#e05780', '#602437', '#ebb3a9', '#ff7aa2', '#218380'];
 
 // Formato de moneda
 const formatCurrency = (value: number) => {
@@ -19,20 +54,51 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+// Formato de fecha para el eje X
+const formatDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
+
+// Formato de fecha para el tooltip
+const formatDateTooltip = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
+
 const Reports = () => {
   const {
     isLoading,
     dashboardStats,
     salesByPeriod,
     topProducts,
-    salesByClient,
     inventoryStatus,
-    salesByUser,
-    salesByLicorType,
-    profitAnalysis,
     selectedPeriod,
     handlePeriodChange,
-    loadAllData
+    loadAllData,
+    ingresosTotales,
+    totalCostosOperativos,
+    gananciaNeta,
+    margenGanancia,
+    productosPeriodo,
+    handleProductosPeriodoChange
   } = useReports();
 
   if (isLoading && !dashboardStats) {
@@ -59,70 +125,77 @@ const Reports = () => {
         </Button>
       </div>
 
-      {/* Estadísticas Generales */}
-      {dashboardStats && (
+      {/* Reportes Financieros */}
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight mb-2">Reportes Financieros</h2>
+        <p className="text-muted-foreground mb-4">Análisis completo del desempeño financiero</p>
+        
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-200">
+          {/* Ingresos Totales */}
+          <Card className="bg-gradient-to-br from-[#c9184a] to-[#a01639] text-white border-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-pink-800">Total Ventas</CardTitle>
-              <DollarSign className="h-4 w-4 text-pink-600" />
+              <CardTitle className="text-sm font-medium">Ingresos Totales</CardTitle>
+              <DollarSign className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-pink-900">
-                {formatCurrency(dashboardStats.monto_total_ventas)}
+              <div className="text-2xl font-bold">
+                {formatCurrency(ingresosTotales)}
               </div>
-              <p className="text-xs text-pink-600 mt-1">
-                {dashboardStats.total_ventas} transacciones
+              <p className="text-xs text-white/80 mt-1">
+                Este mes
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-teal-50 to-white border-teal-200">
+          {/* Margen de Ganancia */}
+          <Card className="bg-gradient-to-br from-[#218380] to-[#196663] text-white border-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-teal-800">Productos</CardTitle>
-              <Package className="h-4 w-4 text-teal-600" />
+              <CardTitle className="text-sm font-medium">Margen de Ganancia</CardTitle>
+              <Percent className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-teal-900">
-                {dashboardStats.total_productos}
+              <div className="text-2xl font-bold">
+                {margenGanancia.toFixed(1)}%
               </div>
-              <p className="text-xs text-teal-600 mt-1">
-                En catálogo
+              <p className="text-xs text-white/80 mt-1">
+                Promedio mensual
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-200">
+          {/* Costos Operativos */}
+          <Card className="bg-gradient-to-br from-[#8f2d56] to-[#6d2241] text-white border-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-800">Clientes</CardTitle>
-              <Users className="h-4 w-4 text-purple-600" />
+              <CardTitle className="text-sm font-medium">Costos Operativos</CardTitle>
+              <TrendingUp className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-900">
-                {dashboardStats.total_clientes}
+              <div className="text-2xl font-bold">
+                {formatCurrency(totalCostosOperativos)}
               </div>
-              <p className="text-xs text-purple-600 mt-1">
-                Clientes registrados
+              <p className="text-xs text-white/80 mt-1">
+                Este mes
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-white border-orange-200">
+          {/* Ganancia Neta */}
+          <Card className="bg-gradient-to-br from-[#e05780] to-[#c04369] text-white border-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-800">Stock Bajo</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-orange-600" />
+              <CardTitle className="text-sm font-medium">Ganancia Neta</CardTitle>
+              <TrendingUp className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-900">
-                {dashboardStats.productos_stock_bajo}
+              <div className="text-2xl font-bold">
+                {formatCurrency(gananciaNeta)}
               </div>
-              <p className="text-xs text-orange-600 mt-1">
-                Requieren atención
+              <p className="text-xs text-white/80 mt-1">
+                Este mes
               </p>
             </CardContent>
           </Card>
         </div>
-      )}
+      </div>
 
       {/* Ventas por Período */}
       <Card>
@@ -150,161 +223,137 @@ const Reports = () => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={salesByPeriod}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="fecha" />
+              <XAxis 
+                dataKey="fecha" 
+                tickFormatter={formatDate}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                interval="preserveStartEnd"
+              />
               <YAxis yAxisId="left" />
               <YAxis yAxisId="right" orientation="right" />
               <Tooltip 
+                labelFormatter={(label) => formatDateTooltip(label)}
                 formatter={(value: any, name: string) => {
-                  if (name === 'total_ventas') return [formatCurrency(value), 'Monto'];
-                  return [value, 'Cantidad'];
+                  if (name === 'total_ventas') return [formatCurrency(value), 'Monto Total'];
+                  return [value, 'Cantidad de Ventas'];
+                }}
+                contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  padding: '12px'
                 }}
               />
               <Legend />
               <Line yAxisId="left" type="monotone" dataKey="cantidad_ventas" stroke="#218380" name="Cantidad de Ventas" strokeWidth={2} />
-              <Line yAxisId="right" type="monotone" dataKey="total_ventas" stroke="#b9375e" name="Monto Total" strokeWidth={2} />
+              <Line yAxisId="right" type="monotone" dataKey="total_ventas" stroke="#c9184a" name="Monto Total" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Top Productos y Ventas por Cliente */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Top Productos */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Productos Más Vendidos</CardTitle>
-            <CardDescription>Top 10 productos por cantidad</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topProducts} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="nombre" type="category" width={100} />
-                <Tooltip formatter={(value: any) => value} />
-                <Bar dataKey="cantidad_total" fill="#b9375e" name="Cantidad Vendida" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Ventas por Cliente */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Clientes</CardTitle>
-            <CardDescription>Clientes con más compras</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={salesByClient.slice(0, 5)}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${entry.nombre}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="total_compras"
-                >
-                  {salesByClient.slice(0, 5).map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: any) => formatCurrency(value)} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Ventas por Usuario y Tipo de Licor */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Ventas por Usuario */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ventas por Usuario</CardTitle>
-            <CardDescription>Desempeño del equipo de ventas</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={salesByUser}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="nombre" />
-                <YAxis />
-                <Tooltip formatter={(value: any) => formatCurrency(value)} />
-                <Bar dataKey="total_ventas" fill="#218380" name="Total Ventas" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Ventas por Tipo de Licor */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ventas por Tipo de Licor</CardTitle>
-            <CardDescription>Distribución por categoría</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={salesByLicorType}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${entry.nombre}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="total_ventas"
-                >
-                  {salesByLicorType.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: any) => formatCurrency(value)} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Análisis de Utilidad */}
-      <Card>
+      {/* Análisis de Rentabilidad */}
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Análisis de Utilidad</CardTitle>
-          <CardDescription>Productos con mayor ganancia potencial</CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Análisis de Rentabilidad</CardTitle>
+              <CardDescription>Distribución de ganancias y productos más rentables</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={productosPeriodo} onValueChange={(value: 'diario' | 'semanal' | 'mensual') => handleProductosPeriodoChange(value)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="diario">Diario</SelectItem>
+                  <SelectItem value="semanal">Semanal</SelectItem>
+                  <SelectItem value="mensual">Mensual</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Producto</th>
-                  <th className="text-right p-2">Precio Compra</th>
-                  <th className="text-right p-2">Precio Venta</th>
-                  <th className="text-right p-2">Utilidad %</th>
-                  <th className="text-right p-2">Stock</th>
-                  <th className="text-right p-2">Ganancia Potencial</th>
-                </tr>
-              </thead>
-              <tbody>
-                {profitAnalysis.map((item, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="p-2 font-medium">{item.nombre}</td>
-                    <td className="text-right p-2">{formatCurrency(item.precio_compra)}</td>
-                    <td className="text-right p-2">{formatCurrency(item.precio_venta)}</td>
-                    <td className="text-right p-2">
-                      <Badge variant="secondary">{item.porcentaje_utilidad}%</Badge>
-                    </td>
-                    <td className="text-right p-2">{item.stock_actual}</td>
-                    <td className="text-right p-2 font-bold text-green-600">
-                      {formatCurrency(item.ganancia_potencial)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
+            {/* Distribución de Ganancias - Gráfico de Dona */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Distribución de Ganancias</h3>
+              <ResponsiveContainer width="100%" height={400}>
+                <PieChart>
+                  <Pie
+                    data={topProducts}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={130}
+                    paddingAngle={5}
+                    dataKey="ganancia"
+                    label={(entry: any) => `${((entry?.margen_ganancia || 0) as number).toFixed(0)}%`}
+                  >
+                    {topProducts.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: any) => formatCurrency(value)}
+                    labelFormatter={(_label, payload) => payload?.[0]?.payload?.nombre || ''}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    formatter={(value, entry: any) => {
+                      const data = entry.payload;
+                      const margen = data?.margen_ganancia || 0;
+                      return `${data?.nombre || value} - ${margen.toFixed(0)}%`;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Productos Más Rentables */}
+            <div className="max-w-xs">
+              <h3 className="text-lg font-semibold mb-4">Productos Más Rentables</h3>
+              <div className="space-y-2">
+                {topProducts.length > 0 ? (
+                  topProducts.map((producto) => {
+                    return (
+                      <div key={producto.id_producto} className="border rounded-lg p-2.5 bg-gray-50">
+                        <div className="mb-1.5">
+                          <h4 className="font-semibold text-sm text-gray-900">{producto.nombre}</h4>
+                          <p className="text-xs text-gray-600">{producto.cantidad_total} unidades vendidas</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mt-1.5">
+                          <div>
+                            <p className="text-xs text-gray-500">Ventas</p>
+                            <p className="font-semibold text-sm text-gray-900">{formatCurrency(producto.ventas_totales || 0)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Costo</p>
+                            <p className="font-semibold text-sm text-red-600">{formatCurrency(producto.costo_total || 0)}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-xs text-gray-500">Ganancia</p>
+                            <p className="font-semibold text-sm text-green-600">{formatCurrency(producto.ganancia || 0)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No hay datos disponibles para el período seleccionado
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -317,36 +366,51 @@ const Reports = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Producto</th>
-                  <th className="text-left p-2">Tipo</th>
-                  <th className="text-right p-2">Cantidad</th>
-                  <th className="text-right p-2">Precio Unitario</th>
-                  <th className="text-right p-2">Valor Stock</th>
-                  <th className="text-center p-2">Estado</th>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="text-left p-3 font-semibold text-sm text-gray-700 bg-gray-50">Producto</th>
+                  <th className="text-left p-3 font-semibold text-sm text-gray-700 bg-gray-50">Tipo</th>
+                  <th className="text-right p-3 font-semibold text-sm text-gray-700 bg-gray-50">Cantidad</th>
+                  <th className="text-right p-3 font-semibold text-sm text-gray-700 bg-gray-50">Precio Unitario</th>
+                  <th className="text-right p-3 font-semibold text-sm text-gray-700 bg-gray-50">Valor Stock</th>
+                  <th className="text-center p-3 font-semibold text-sm text-gray-700 bg-gray-50">Estado</th>
                 </tr>
               </thead>
               <tbody>
-                {inventoryStatus.map((item, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="p-2 font-medium">{item.producto_nombre}</td>
-                    <td className="p-2 text-gray-600">{item.tipo_licor}</td>
-                    <td className="text-right p-2">{item.cantidad}</td>
-                    <td className="text-right p-2">{formatCurrency(item.precio_venta)}</td>
-                    <td className="text-right p-2 font-bold">{formatCurrency(item.valor_stock)}</td>
-                    <td className="text-center p-2">
-                      <Badge 
-                        variant={item.estado === 'bajo' ? 'destructive' : item.estado === 'medio' ? 'outline' : 'secondary'}
-                      >
-                        {item.estado === 'bajo' && '⚠️ Bajo'}
-                        {item.estado === 'medio' && '📦 Medio'}
-                        {item.estado === 'alto' && '✅ Alto'}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
+                {inventoryStatus.map((item, index) => {
+                  const estadoStyles = getEstadoInventarioStyles(item.estado);
+                  return (
+                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="p-3 font-medium text-gray-900">{item.producto_nombre}</td>
+                      <td className="p-3 text-gray-600">{item.tipo_licor}</td>
+                      <td className="text-right p-3 text-gray-900">{item.cantidad}</td>
+                      <td className="text-right p-3 text-gray-700">{formatCurrency(item.precio_venta)}</td>
+                      <td className="text-right p-3 font-bold text-gray-900">{formatCurrency(item.valor_stock)}</td>
+                      <td className="text-center p-3">
+                        <div
+                          className="inline-flex items-center justify-center rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-200 border-0"
+                          style={{
+                            backgroundColor: estadoStyles.backgroundColor,
+                            color: estadoStyles.color,
+                            minWidth: '70px',
+                            textAlign: 'center',
+                            border: 'none',
+                            outline: 'none'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = estadoStyles.hoverColor;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = estadoStyles.backgroundColor;
+                          }}
+                        >
+                          {estadoStyles.label}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

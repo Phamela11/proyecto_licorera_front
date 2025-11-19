@@ -122,6 +122,13 @@ const TimeRecords = () => {
       width: "100px",
     },
     {
+      key: "descanso",
+      title: "Descanso",
+      align: "center",
+      width: "100px",
+      render: (descanso: number) => `${descanso}h`,
+    },
+    {
       key: "horas",
       title: "Horas",
       align: "center",
@@ -268,6 +275,20 @@ const TimeRecords = () => {
                   />
                   <p className="text-xs text-muted-foreground">Dejar vacío si aún está trabajando</p>
                 </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="descanso">Tiempo de Descanso (horas)</Label>
+                <Input
+                  id="descanso"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="8"
+                  defaultValue={newRecord.descanso}
+                  {...register('descanso')}
+                  placeholder="Ej: 1 para 1 hora de descanso"
+                />
+                <p className="text-xs text-muted-foreground">Horas que se restarán del total (por defecto 0)</p>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="observaciones">Observaciones</Label>
