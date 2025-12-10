@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { createSale, getSales, updateSale, deleteSale } from "../../core/services/sales.service";
-import { getClients } from "../../core/services/clients.service";
+import { getClients, createClient } from "../../core/services/clients.service";
 import { getProducts } from "../../core/services/products.service";
 import { getUsers } from "../../core/services/users.service";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -134,6 +134,12 @@ export const useVentas = () => {
     const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+    const [newClient, setNewClient] = useState({
+        nombre: "",
+        telefono: "",
+        direccion: "",
+    });
 
     const { register, handleSubmit, reset, setValue, watch } = useForm();
 
@@ -418,6 +424,53 @@ export const useVentas = () => {
         setIsDeleteDialogOpen(true);
     };
 
+    // Función para abrir modal de crear cliente
+    const openClientModal = () => {
+        setNewClient({
+            nombre: "",
+            telefono: "",
+            direccion: "",
+        });
+        setIsClientModalOpen(true);
+    };
+
+    // Función para cerrar modal de crear cliente
+    const closeClientModal = () => {
+        setIsClientModalOpen(false);
+        setNewClient({
+            nombre: "",
+            telefono: "",
+            direccion: "",
+        });
+    };
+
+    // Función para crear cliente desde el modal de venta
+    const onCreateClient = async (clientData: { nombre: string; telefono: string; direccion: string }) => {
+        try {
+            const response = await createClient(clientData);
+            toast.success(response?.message || "Cliente creado exitosamente");
+            
+            // Recargar la lista de clientes
+            await getDataClients();
+            
+            // Seleccionar el nuevo cliente en el dropdown
+            // El backend devuelve: { success: true, message: '...', data: { id_cliente: ... } }
+            // El servicio devuelve response.data, entonces response ya es el objeto completo
+            const newClientId = response?.data?.id_cliente;
+            if (newClientId) {
+                setNewSale((prev: any) => ({ ...prev, id_cliente: newClientId }));
+                setValue('id_cliente', newClientId);
+            }
+            
+            // Cerrar el modal de cliente
+            closeClientModal();
+        } catch (error: any) {
+            console.error('Error al crear cliente:', error);
+            const errorMessage = error?.response?.data?.message || error?.message || "Error al crear el cliente";
+            toast.error(errorMessage);
+        }
+    };
+
     return {
         ventas,
         filteredSales,
@@ -452,6 +505,14 @@ export const useVentas = () => {
         register,
         handleSubmit,
         reset,
-        watch
+        watch,
+        // Funciones para crear cliente
+        isClientModalOpen,
+        setIsClientModalOpen,
+        newClient,
+        setNewClient,
+        openClientModal,
+        closeClientModal,
+        onCreateClient
     };
 };

@@ -1,7 +1,8 @@
-import { Plus, Edit, Trash2, Search, ShoppingCart, DollarSign, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Search, ShoppingCart, DollarSign, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -61,7 +62,15 @@ const Ventas = () => {
     openDeleteDialog,
     setIsDeleteDialogOpen,
     setSaleToDelete,
-    handleSubmit
+    handleSubmit,
+    // Funciones para crear cliente
+    isClientModalOpen,
+    setIsClientModalOpen,
+    newClient,
+    setNewClient,
+    openClientModal,
+    closeClientModal,
+    onCreateClient
   } = useVentas();
   
   // Función para manejar el cierre del modal y resetear el producto seleccionado
@@ -291,7 +300,19 @@ const Ventas = () => {
 
               {/* Cliente */}
               <div className="grid gap-2">
-                <Label htmlFor="id_cliente">Cliente *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="id_cliente">Cliente *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={openClientModal}
+                    className="h-8 text-xs border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
+                  >
+                    <UserPlus className="mr-1 h-3 w-3" />
+                    Nuevo Cliente
+                  </Button>
+                </div>
                 <Select
                   value={newSale.id_cliente > 0 ? newSale.id_cliente.toString() : ""}
                   onValueChange={(value: string) => {
@@ -491,6 +512,72 @@ const Ventas = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal para crear cliente */}
+      <Dialog open={isClientModalOpen} onOpenChange={setIsClientModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Crear Nuevo Cliente</DialogTitle>
+            <DialogDescription>
+              Completa los datos para registrar un nuevo cliente. Se seleccionará automáticamente después de crearlo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="client-nombre">Nombre completo *</Label>
+              <Input
+                id="client-nombre"
+                value={newClient.nombre}
+                onChange={(e) => setNewClient((prev) => ({ ...prev, nombre: e.target.value }))}
+                placeholder="Ingresa el nombre completo"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="client-telefono">Teléfono *</Label>
+              <Input
+                id="client-telefono"
+                type="tel"
+                value={newClient.telefono}
+                onChange={(e) => setNewClient((prev) => ({ ...prev, telefono: e.target.value }))}
+                placeholder="3001234567"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="client-direccion">Dirección *</Label>
+              <Input
+                id="client-direccion"
+                value={newClient.direccion}
+                onChange={(e) => setNewClient((prev) => ({ ...prev, direccion: e.target.value }))}
+                placeholder="Ingresa la dirección completa"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeClientModal}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                // Validar campos
+                if (!newClient.nombre.trim() || !newClient.telefono.trim() || !newClient.direccion.trim()) {
+                  toast.error("Por favor completa todos los campos requeridos");
+                  return;
+                }
+                onCreateClient(newClient);
+              }}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Crear Cliente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

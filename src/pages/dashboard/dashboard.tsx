@@ -7,16 +7,21 @@ import {
   Calculator,
   TrendingUp,
   ArrowRight,
-  Wallet
+  Wallet,
+  GlassWater
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  // Obtener el rol del usuario
+  const userRole = usuario?.rol === 'administrador' ? 'admin' : (usuario?.rol || 'admin');
+  const isCajero = userRole === 'cajero';
 
   // Módulos principales del sistema
-  const modulos = [
+  const modulosBase = [
     {
       titulo: "Ventas",
       descripcion: "Registra y gestiona ventas",
@@ -56,16 +61,29 @@ const Dashboard = () => {
       ruta: "/reportes",
       color: "bg-gradient-to-br from-[#8f2d56] to-[#6d2241]",
       iconColor: "text-pink-100"
-    },
-    {
-      titulo: "Costos Operativos",
-      descripcion: "Gestión de gastos",
-      icono: Calculator,
-      ruta: "/costos-operativos",
-      color: "bg-gradient-to-br from-[#ebb3a9] to-[#d99590]",
-      iconColor: "text-pink-100"
     }
   ];
+
+  // Último módulo según el rol
+  const ultimoModulo = isCajero 
+    ? {
+        titulo: "Tipo de Licores",
+        descripcion: "Gestión de tipos de licores",
+        icono: GlassWater,
+        ruta: "/tipo-licor",
+        color: "bg-gradient-to-br from-[#ebb3a9] to-[#d99590]",
+        iconColor: "text-pink-100"
+      }
+    : {
+        titulo: "Costos Operativos",
+        descripcion: "Gestión de gastos",
+        icono: Calculator,
+        ruta: "/costos-operativos",
+        color: "bg-gradient-to-br from-[#ebb3a9] to-[#d99590]",
+        iconColor: "text-pink-100"
+      };
+
+  const modulos = [...modulosBase, ultimoModulo];
 
   return (
     <div className="p-6 space-y-8">

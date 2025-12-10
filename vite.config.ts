@@ -15,7 +15,7 @@ export default defineConfig({
     host: true, // Permite acceso desde cualquier host
     port: 5173, // Puerto por defecto de Vite
     allowedHosts: [
-      '9b6d32dd1336.ngrok-free.app',
+      '8a19e5323481.ngrok-free.app',
       '.ngrok-free.app', // Permite cualquier subdominio de ngrok
       '.ngrok.io', // Permite también dominios .ngrok.io
       'localhost',

@@ -45,8 +45,13 @@ const CostosOperativos = () => {
     searchTerm,
     setSearchTerm,
     register,
-    handleSubmitForm
+    handleSubmitForm,
+    watch,
+    generarPeriodoDesdeFecha
   } = useCostosOperativos();
+
+  // Observar cambios en la fecha
+  const fecha = watch('fecha');
 
   // Función para obtener color según categoría
   const getCategoriaColor = (categoria: string) => {
@@ -288,8 +293,16 @@ const CostosOperativos = () => {
               <Input
                 id="periodo"
                 {...register('periodo')}
-                placeholder="Ej: Enero 2024, Q1 2024"
+                readOnly
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
+                placeholder="Se generará automáticamente según la fecha"
               />
+              {fecha && (
+                <p className="text-xs text-muted-foreground">
+                  El período se genera automáticamente: <span className="font-medium text-blue-600">{generarPeriodoDesdeFecha(fecha)}</span>
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">

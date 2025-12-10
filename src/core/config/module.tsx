@@ -29,7 +29,7 @@ import {
       name: 'Dashboard',
       path: '/dashboard',
       icon: Home,
-      roles: ['admin']
+      roles: ['admin', 'cajero']
     },
     {
       id: 2,
@@ -85,7 +85,7 @@ import {
       name: 'Reportes',
       path: '/reportes',
       icon: ChartBar,
-      roles: ['admin']
+      roles: ['admin', 'cajero']
     },
     {
       id: 10,

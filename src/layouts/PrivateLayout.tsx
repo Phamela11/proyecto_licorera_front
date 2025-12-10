@@ -87,9 +87,9 @@ export default function PrivateLayout() {
         </header>
       
       <div className="flex-1 w-full flex flex-row overflow-hidden min-h-0">
-        <aside className="w-64 bg-black border-r border-gray-700 flex flex-col ">
-          <nav className="p-4 flex-1">
-            <ul className="space-y-1">
+        <aside className="w-64 bg-black border-r border-gray-700 flex flex-col overflow-hidden">
+          <nav className="p-2.5 flex-1 overflow-y-auto">
+            <ul className="space-y-0.5">
               {userModules.map((module) => (
                 <li key={module.id}>
                   <Link
@@ -97,7 +97,7 @@ export default function PrivateLayout() {
                     data-module-link
                     data-module-id={module.id}
                     onClick={() => handleModuleClick(module.id, module.path)}
-                    className={`flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 ${
+                    className={`flex items-center gap-2 p-2 rounded-md transition-colors duration-200 ${
                       activeModule === module.id
                         ? 'text-white shadow-md'
                         : 'text-gray-300 hover:text-white'
@@ -116,8 +116,8 @@ export default function PrivateLayout() {
                       }
                     }}
                   >
-                    <module.icon className="w-5 h-5" />
-                    <span className="font-medium">{module.name}</span>
+                    <module.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="font-medium text-sm truncate">{module.name}</span>
                   </Link>
                 </li>
               ))}
@@ -125,18 +125,18 @@ export default function PrivateLayout() {
           </nav>
           
           {/* Botón de cerrar sesión al final */}
-          <div className="p-4 border-t border-gray-700">
+          <div className="p-2.5 border-t border-gray-700 flex-shrink-0">
             <button
               onClick={() => {
                 localStorage.removeItem('user');
                 navigate("/");
               }}
-              className="w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:text-white transition-colors duration-200"
+              className="w-full flex items-center gap-2 p-2 rounded-md text-gray-300 hover:text-white transition-colors duration-200"
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c9184a'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">Cerrar Sesión</span>
+              <LogOut className="w-4 h-4 flex-shrink-0" />
+              <span className="font-medium text-sm">Cerrar Sesión</span>
             </button>
           </div>
         </aside>

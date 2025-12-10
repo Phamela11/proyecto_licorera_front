@@ -1,5 +1,5 @@
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { DollarSign, RefreshCw, TrendingUp, Percent, Download } from 'lucide-react';
+import { DollarSign, RefreshCw, TrendingUp, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -262,22 +262,16 @@ const Reports = () => {
               <CardTitle>Análisis de Rentabilidad</CardTitle>
               <CardDescription>Distribución de ganancias y productos más rentables</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Select value={productosPeriodo} onValueChange={(value: 'diario' | 'semanal' | 'mensual') => handleProductosPeriodoChange(value)}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="diario">Diario</SelectItem>
-                  <SelectItem value="semanal">Semanal</SelectItem>
-                  <SelectItem value="mensual">Mensual</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
-            </div>
+            <Select value={productosPeriodo} onValueChange={(value: 'diario' | 'semanal' | 'mensual') => handleProductosPeriodoChange(value)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="diario">Diario</SelectItem>
+                <SelectItem value="semanal">Semanal</SelectItem>
+                <SelectItem value="mensual">Mensual</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>

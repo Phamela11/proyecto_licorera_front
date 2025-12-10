@@ -44,11 +44,11 @@ const getApiUrl = () => {
     console.error('   4. Reinicia el servidor del frontend (npm run dev)');
     console.error('');
     console.error('⚠️ Intentando usar localhost (será bloqueado por el navegador)');
-    return 'http://localhost:3000/api';
+    return 'http://10.62.1.86:3000/api';
   }
   
   // Por defecto, usar localhost
-  return 'http://localhost:3000/api';
+  return 'http://10.62.1.86:3000/api';
 };
 
 export const URL = getApiUrl();

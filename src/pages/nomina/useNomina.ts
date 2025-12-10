@@ -106,10 +106,35 @@ const useNomina = () => {
 
     const { register, handleSubmit: handleSubmitForm, reset, setValue, watch } = useForm();
 
+    // Observar cambios en la fecha de pago para actualizar el período automáticamente
+    const fechaPago = watch('fecha_pago');
+
     useEffect(() => {
         getDataNominas();
         getDataEmpleados();
     }, []);
+
+    // Función para generar período automáticamente basado en la fecha de pago
+    const generarPeriodoDesdeFecha = (fecha: string): string => {
+        if (!fecha) return '';
+        try {
+            const date = new Date(fecha);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // getMonth() devuelve 0-11, necesitamos 1-12
+            return `${year}-${String(month).padStart(2, '0')}`;
+        } catch (error) {
+            return '';
+        }
+    };
+
+    // Efecto para actualizar el período cuando cambie la fecha de pago
+    useEffect(() => {
+        if (fechaPago) {
+            const periodoGenerado = generarPeriodoDesdeFecha(fechaPago);
+            setValue('periodo', periodoGenerado);
+            setNewNomina(prev => ({ ...prev, periodo: periodoGenerado }));
+        }
+    }, [fechaPago, setValue]);
 
     const getDataNominas = async () => {
         try {
@@ -151,17 +176,25 @@ const useNomina = () => {
             setValue('total_horas', datos.total_horas || 0);
             setValue('monto', datos.monto_total || 0);
             
-            // Generar periodo automáticamente
-            const fecha = new Date(fechaInicio);
-            const periodo = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-            setValue('periodo', periodo);
-            
-            setNewNomina(prev => ({
-                ...prev,
-                total_horas: datos.total_horas || 0,
-                monto: datos.monto_total || 0,
-                periodo: periodo
-            }));
+            // El período se generará automáticamente cuando se seleccione la fecha de pago
+            // Si ya hay una fecha de pago, generar el período
+            const fechaPagoActual = watch('fecha_pago');
+            if (fechaPagoActual) {
+                const periodo = generarPeriodoDesdeFecha(fechaPagoActual);
+                setValue('periodo', periodo);
+                setNewNomina(prev => ({
+                    ...prev,
+                    total_horas: datos.total_horas || 0,
+                    monto: datos.monto_total || 0,
+                    periodo: periodo
+                }));
+            } else {
+                setNewNomina(prev => ({
+                    ...prev,
+                    total_horas: datos.total_horas || 0,
+                    monto: datos.monto_total || 0
+                }));
+            }
             
             toast.success(`Total: ${datos.total_horas} horas trabajadas`);
         } catch (error) {
@@ -194,15 +227,19 @@ const useNomina = () => {
         setIsEditMode(true);
         setEditingNominaId(nomina.id);
         
+        const fechaPagoFormatted = nomina.fecha_pago_raw.split('T')[0];
+        // Generar período automáticamente basado en la fecha de pago
+        const periodoGenerado = generarPeriodoDesdeFecha(fechaPagoFormatted);
+        
         const nominaData = {
             id_usuario: nomina.empleado_id.toString(),
             fecha_inicio: nomina.fecha_inicio_raw.split('T')[0],
             fecha_fin: nomina.fecha_fin_raw.split('T')[0],
-            fecha_pago: nomina.fecha_pago_raw.split('T')[0],
+            fecha_pago: fechaPagoFormatted,
             total_horas: nomina.total_horas,
             monto: nomina.monto,
             bono: nomina.bono,
-            periodo: nomina.periodo,
+            periodo: periodoGenerado,
             estado: nomina.estado,
         };
         
@@ -210,11 +247,11 @@ const useNomina = () => {
         setValue('id_usuario', nomina.empleado_id);
         setValue('fecha_inicio', nomina.fecha_inicio_raw.split('T')[0]);
         setValue('fecha_fin', nomina.fecha_fin_raw.split('T')[0]);
-        setValue('fecha_pago', nomina.fecha_pago_raw.split('T')[0]);
+        setValue('fecha_pago', fechaPagoFormatted);
         setValue('total_horas', nomina.total_horas);
         setValue('monto', nomina.monto);
         setValue('bono', nomina.bono);
-        setValue('periodo', nomina.periodo);
+        setValue('periodo', periodoGenerado);
         setValue('estado', nomina.estado);
         
         setIsModalOpen(true);
@@ -228,6 +265,19 @@ const useNomina = () => {
                 return;
             }
 
+            // Generar período automáticamente basado en la fecha de pago si no existe
+            let periodoFinal = data.periodo;
+            if (!periodoFinal || periodoFinal.trim() === '') {
+                periodoFinal = generarPeriodoDesdeFecha(data.fecha_pago);
+            } else {
+                // Validar que el período coincida con la fecha de pago
+                const periodoEsperado = generarPeriodoDesdeFecha(data.fecha_pago);
+                if (periodoFinal !== periodoEsperado) {
+                    // Si no coincide, usar el generado automáticamente
+                    periodoFinal = periodoEsperado;
+                }
+            }
+
             const nominaData = {
                 id_usuario: Number(data.id_usuario),
                 fecha_inicio: data.fecha_inicio,
@@ -236,7 +286,7 @@ const useNomina = () => {
                 total_horas: Number(data.total_horas || 0),
                 monto: Number(data.monto || 0),
                 bono: Number(data.bono || 0),
-                periodo: data.periodo,
+                periodo: periodoFinal,
                 estado: data.estado || 'pendiente'
             };
 
@@ -312,6 +362,7 @@ const useNomina = () => {
         register,
         handleSubmitForm,
         watch,
+        generarPeriodoDesdeFecha
     };
 };
 

@@ -93,11 +93,39 @@ const useCostosOperativos = () => {
     const [filters, setFilters] = useState<CostoOperativoFilters>({});
     const [loading, setLoading] = useState(false);
     
-    const { register, handleSubmit: handleSubmitForm, reset, setValue } = useForm();
+    const { register, handleSubmit: handleSubmitForm, reset, setValue, watch } = useForm();
+
+    // Observar cambios en la fecha para actualizar el período automáticamente
+    const fecha = watch('fecha');
 
     useEffect(() => {
         getDataCostosOperativos();
     }, []);
+
+    // Función para generar período automáticamente basado en la fecha
+    const generarPeriodoDesdeFecha = (fecha: string): string => {
+        if (!fecha) return '';
+        try {
+            const date = new Date(fecha);
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            return `${meses[month]} - ${year}`;
+        } catch (error) {
+            return '';
+        }
+    };
+
+    // Efecto para actualizar el período cuando cambie la fecha
+    useEffect(() => {
+        if (fecha) {
+            const periodoGenerado = generarPeriodoDesdeFecha(fecha);
+            setValue('periodo', periodoGenerado);
+        }
+    }, [fecha, setValue]);
 
     const getDataCostosOperativos = async (appliedFilters?: CostoOperativoFilters) => {
         try {
@@ -161,9 +189,68 @@ const useCostosOperativos = () => {
         setValue('descripcion', costo.descripcion);
         setValue('monto', costo.monto);
         setValue('fecha', fechaFormatted);
-        setValue('periodo', costo.periodo);
+        // Generar período automáticamente basado en la fecha
+        const periodoGenerado = generarPeriodoDesdeFecha(fechaFormatted);
+        setValue('periodo', periodoGenerado);
         setValue('observaciones', costo.observaciones);
         setIsModalOpen(true);
+    };
+
+    // Función para validar que el período coincida con la fecha
+    const validatePeriodoWithFecha = (fecha: string, periodo: string): boolean => {
+        if (!periodo || !fecha) return true; // Si no hay período, no validar
+        
+        try {
+            const date = new Date(fecha);
+            const year = date.getFullYear();
+            const month = date.getMonth(); // 0-11
+            
+            // Nombres de meses en español
+            const meses = [
+                'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+            ];
+            
+            const mesNombre = meses[month];
+            const periodoLower = periodo.toLowerCase();
+            
+            // Verificar que el período contenga el año
+            if (!periodoLower.includes(year.toString())) {
+                return false;
+            }
+            
+            // Verificar que el período contenga el mes (nombre completo o abreviado)
+            const mesEncontrado = meses.some(mes => periodoLower.includes(mes));
+            if (!mesEncontrado) {
+                // Si no encuentra el mes completo, verificar abreviaciones comunes
+                const abreviaciones: { [key: string]: string[] } = {
+                    'enero': ['ene', 'jan'],
+                    'febrero': ['feb', 'febr'],
+                    'marzo': ['mar', 'mzo'],
+                    'abril': ['abr', 'apr'],
+                    'mayo': ['may'],
+                    'junio': ['jun'],
+                    'julio': ['jul'],
+                    'agosto': ['ago', 'ag'],
+                    'septiembre': ['sep', 'sept', 'set'],
+                    'octubre': ['oct'],
+                    'noviembre': ['nov'],
+                    'diciembre': ['dic', 'dec']
+                };
+                
+                const abreviacionesMes = abreviaciones[mesNombre] || [];
+                const mesAbreviadoEncontrado = abreviacionesMes.some(abrev => periodoLower.includes(abrev));
+                
+                if (!mesAbreviadoEncontrado) {
+                    return false;
+                }
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error al validar período:', error);
+            return false;
+        }
     };
 
     // Crear o actualizar costo operativo
@@ -174,6 +261,18 @@ const useCostosOperativos = () => {
             if (isNaN(monto) || monto <= 0) {
                 toast.error("El monto debe ser un número válido mayor a 0");
                 return;
+            }
+
+            // Generar período automáticamente basado en la fecha si no existe
+            if (!data.periodo || data.periodo.trim() === '') {
+                data.periodo = generarPeriodoDesdeFecha(data.fecha);
+            } else {
+                // Validar que el período coincida con la fecha (por si acaso se modificó manualmente)
+                const periodoValido = validatePeriodoWithFecha(data.fecha, data.periodo);
+                if (!periodoValido) {
+                    // Si no coincide, usar el generado automáticamente
+                    data.periodo = generarPeriodoDesdeFecha(data.fecha);
+                }
             }
 
             const costoData: CostoOperativo = {
@@ -273,7 +372,9 @@ const useCostosOperativos = () => {
         applyFilters,
         clearFilters,
         register,
-        handleSubmitForm
+        handleSubmitForm,
+        watch,
+        generarPeriodoDesdeFecha
     }
 }
 

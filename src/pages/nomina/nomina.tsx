@@ -28,12 +28,14 @@ const Nomina = () => {
     handleSubmitForm,
     onSubmit,
     watch,
-    handleCalcularHoras
+    handleCalcularHoras,
+    generarPeriodoDesdeFecha
   } = useNomina();
 
   const empleadoSeleccionado = watch('id_usuario');
   const fechaInicio = watch('fecha_inicio');
   const fechaFin = watch('fecha_fin');
+  const fechaPago = watch('fecha_pago');
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
@@ -330,9 +332,17 @@ const Nomina = () => {
                   type="text"
                   defaultValue={newNomina.periodo}
                   {...register('periodo')}
-                  placeholder="2025-01"
+                  placeholder="Se generará automáticamente según la fecha de pago"
                   maxLength={7}
+                  readOnly
+                  disabled
+                  className="bg-gray-100 cursor-not-allowed"
                 />
+                {fechaPago && (
+                  <p className="text-xs text-muted-foreground">
+                    El período se genera automáticamente: <span className="font-medium text-blue-600">{generarPeriodoDesdeFecha(fechaPago)}</span>
+                  </p>
+                )}
               </div>
             </div>
 
