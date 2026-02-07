@@ -32,7 +32,8 @@ const mapUserFromAPI = (apiUser: UserFromAPI): User => ({
     telefono: apiUser.telefono,
     rol: apiUser.rol,
     fecha_creacion: formatDate(apiUser.fecha),
-    contrasena: apiUser.contrasena
+    contrasena: apiUser.contrasena,
+    valor_hora: apiUser.valor_hora || 0
 });
 
 // Interfaz para los datos que vienen del backend
@@ -44,6 +45,7 @@ interface UserFromAPI {
     rol: string;
     fecha: string;
     contrasena?: string;
+    valor_hora?: number;
 }
 
 // Interfaz para el frontend
@@ -55,6 +57,7 @@ export interface User {
     rol: string;
     telefono: string;
     fecha_creacion: string;
+    valor_hora: number;
 }
   
   
@@ -74,12 +77,13 @@ const useUsers = () => {
       rol: "",
       telefono: "",
       fecha_creacion: "",
+      valor_hora: 0,
     });
     const { register, handleSubmit: handleSubmitForm, reset, setValue } = useForm();
 
     useEffect(() => {
         getDataUsers();
-    }, [newUser]);
+    }, []);
 
 
     const getDataUsers = async () => {
@@ -122,6 +126,7 @@ const useUsers = () => {
             rol: "",
             telefono: "",
             fecha_creacion: "",
+            valor_hora: 0,
         });
         setIsModalOpen(true);
     };
@@ -137,6 +142,7 @@ const useUsers = () => {
             rol: user.rol,
             telefono: user.telefono,
             fecha_creacion: user.fecha_creacion,
+            valor_hora: user.valor_hora || 0,
         });
         // Establecer valores en el formulario
         setValue('nombre', user.nombre);
@@ -144,19 +150,30 @@ const useUsers = () => {
         setValue('telefono', user.telefono);
         setValue('rol', user.rol);
         setValue('contrasena', ''); // Campo vacío en edición - opcional cambiar
+        setValue('valor_hora', user.valor_hora || 0);
         setIsModalOpen(true);
     };
 
     // Crear o actualizar usuario
     const onSubmit = async (data: any) => {
         try {
+            // Mapear los nombres de los campos del frontend a los que espera el backend
+            const mappedData = {
+                nombre_completo: data.nombre,
+                email: data.email,
+                telefono: data.telefono,
+                contraseña: data.contrasena,
+                rol: data.rol,
+                valor_hora: data.valor_hora ? Number(data.valor_hora) : 0
+            };
+
             if (isEditMode && editingUserId) {
                 // Actualizar usuario existente
-                const updateData = { ...data, id: editingUserId };
+                const updateData = { ...mappedData, id: editingUserId };
                 
                 // Si la contraseña está vacía en modo edición, no la incluir en la actualización
                 if (!data.contrasena || data.contrasena.trim() === '') {
-                    delete updateData.contrasena;
+                    delete updateData.contraseña;
                 }
                 
                 await updateUser(updateData);
@@ -167,7 +184,7 @@ const useUsers = () => {
                     toast.error("La contraseña es obligatoria para crear un usuario");
                     return;
                 }
-                await createUser(data);
+                await createUser(mappedData);
                 toast.success("Usuario creado exitosamente");
             }
             
@@ -180,6 +197,7 @@ const useUsers = () => {
                 rol: "",
                 telefono: "",
                 fecha_creacion: "",
+                valor_hora: 0,
             });
             setIsModalOpen(false);
             setIsEditMode(false);

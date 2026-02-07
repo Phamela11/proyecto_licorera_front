@@ -13,7 +13,8 @@ export default function PrivateLayout() {
   useEffect(() => {
     // Obtener el rol del usuario desde localStorage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userRole = user?.user_metadata?.role || 'admin';
+    // El backend devuelve el rol como 'rol', y puede ser 'administrador' o 'cajero'
+    const userRole = user?.rol === 'administrador' ? 'admin' : (user?.rol || 'admin');
     
     // Obtener módulos según el rol del usuario
     const modules = getModulesByRole(userRole);
@@ -21,9 +22,21 @@ export default function PrivateLayout() {
 
     // Determinar el módulo activo basado en la ruta actual
     const currentPath = location.pathname;
+    
+    // Verificar si la ruta actual está permitida para el rol del usuario
+    const isRouteAllowed = modules.some((module: any) => 
+      currentPath === module.path || currentPath.startsWith(module.path + '/')
+    );
+    
+    // Si la ruta no está permitida y hay módulos disponibles, redirigir al primero
+    if (!isRouteAllowed && modules.length > 0) {
+      navigate(modules[0].path, { replace: true });
+      return;
+    }
+    
     const activeModuleId = modules.find((module: any) => 
-      currentPath.includes(module.path)
-    )?.id || 1;
+      currentPath === module.path || currentPath.startsWith(module.path + '/')
+    )?.id || (modules.length > 0 ? modules[0].id : 1);
     
     setActiveModule(activeModuleId);
     
@@ -38,7 +51,7 @@ export default function PrivateLayout() {
         }
       });
     }, 100);
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   const handleModuleClick = (moduleId: number, path?: string) => {
     setActiveModule(moduleId);
@@ -56,9 +69,9 @@ export default function PrivateLayout() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-gray-100">
+    <div className="h-screen w-full flex flex-col bg-gray-100 overflow-hidden">
 
-        <header className="flex items-center justify-between bg-black shadow-sm border-b border-gray-700 p-4">
+        <header className="h-[56px] flex-shrink-0 w-full flex flex-row items-center justify-between bg-black shadow-sm border-b border-gray-700 ">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-semibold text-white">Panel Administrativo</h1>
       
@@ -68,71 +81,68 @@ export default function PrivateLayout() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-lg text-gray-300">
-              Bienvenido, {JSON.parse(localStorage.getItem('user') || '{}')?.user_metadata?.email || 'Usuario'}
+              Bienvenido, {JSON.parse(localStorage.getItem('user') || '{}')?.nombre || 'Usuario'}
             </span>
           </div>
         </header>
-      {/* Sidebar */}
-      {/* Main */}
-      <div className="flex-1 flex flex-row">
-        {/* Header */}
-        
-      <aside className="w-64 bg-black border-r border-gray-700 flex flex-col">
-        <nav className="p-4 flex-1">
-          <ul className="space-y-1">
-            {userModules.map((module) => (
-              <li key={module.id}>
-                <Link
-                  to={module.path}
-                  data-module-link
-                  data-module-id={module.id}
-                  onClick={() => handleModuleClick(module.id, module.path)}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 ${
-                    activeModule === module.id
-                      ? 'text-white shadow-md'
-                      : 'text-gray-300 hover:text-white'
-                  }`}
-                  style={{
-                    backgroundColor: activeModule === module.id ? '#c9184a' : 'transparent'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (activeModule !== module.id) {
-                      e.currentTarget.style.backgroundColor = '#403d39';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (activeModule !== module.id) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                >
-                  <module.icon className="w-5 h-5" />
-                  <span className="font-medium">{module.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        
-        {/* Botón de cerrar sesión al final */}
-        <div className="p-4 border-t border-gray-700">
-          <button
-            onClick={() => {
-              localStorage.removeItem('user');
-              navigate("/");
-            }}
-            className="w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:text-white transition-colors duration-200"
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c9184a'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Cerrar Sesión</span>
-          </button>
-        </div>
-      </aside>
+      
+      <div className="flex-1 w-full flex flex-row overflow-hidden min-h-0">
+        <aside className="w-64 bg-black border-r border-gray-700 flex flex-col overflow-hidden">
+          <nav className="p-2.5 flex-1 overflow-y-auto">
+            <ul className="space-y-0.5">
+              {userModules.map((module) => (
+                <li key={module.id}>
+                  <Link
+                    to={module.path}
+                    data-module-link
+                    data-module-id={module.id}
+                    onClick={() => handleModuleClick(module.id, module.path)}
+                    className={`flex items-center gap-2 p-2 rounded-md transition-colors duration-200 ${
+                      activeModule === module.id
+                        ? 'text-white shadow-md'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                    style={{
+                      backgroundColor: activeModule === module.id ? '#c9184a' : 'transparent'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeModule !== module.id) {
+                        e.currentTarget.style.backgroundColor = '#403d39';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeModule !== module.id) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <module.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="font-medium text-sm truncate">{module.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          
+          {/* Botón de cerrar sesión al final */}
+          <div className="p-2.5 border-t border-gray-700 flex-shrink-0">
+            <button
+              onClick={() => {
+                localStorage.removeItem('user');
+                navigate("/");
+              }}
+              className="w-full flex items-center gap-2 p-2 rounded-md text-gray-300 hover:text-white transition-colors duration-200"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c9184a'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <LogOut className="w-4 h-4 flex-shrink-0" />
+              <span className="font-medium text-sm">Cerrar Sesión</span>
+            </button>
+          </div>
+        </aside>
 
         {/* Content */}
-        <main className="p-6 flex-1 overflow-y-auto bg-gray-50">
+        <main className="flex-1 w-full overflow-y-auto bg-gray-50 min-h-0">
           <Outlet />
         </main>
       </div>

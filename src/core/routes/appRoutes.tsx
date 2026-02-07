@@ -12,7 +12,14 @@ const Clientes = lazy(() => import('@/pages/clientes/clientes'));
 //backoffice views
 const Products = lazy(() => import('@/pages/products/products'));
 const LicorTypes = lazy(() => import('@/pages/licorTypes/licorTypes'));
-
+const Providers = lazy(() => import('@/pages/providers/providers'));
+const Inventory = lazy(() => import('@/pages/inventory/inventory'));
+const Ventas = lazy(() => import('@/pages/ventas/ventas'));
+const Reports = lazy(() => import('@/pages/reports/reports'));
+const TimeRecords = lazy(() => import('@/pages/timeRecords/timeRecords'));
+const Nomina = lazy(() => import('@/pages/nomina/nomina'));
+const CostosOperativos = lazy(() => import('@/pages/costosOperativos/costosOperativos'));
+const Configuracion = lazy(() => import('@/pages/configuracion/configuracion'));
 export const appRoutes: RouteObject[] = [
   // Rutas de autenticación
   {
@@ -44,6 +51,38 @@ export const appRoutes: RouteObject[] = [
       {
         path: 'tipo-licor',
         element: <LicorTypes />
+      },
+      {
+        path: 'proveedores',
+        element: <Providers />
+      },
+      {
+        path: 'inventario',
+        element: <Inventory />
+      },
+      {
+        path: 'ventas',
+        element: <Ventas />
+      },
+      {
+        path: 'reportes',
+        element: <Reports />
+      },
+      {
+        path: 'registro-horas',
+        element: <TimeRecords />
+      },
+      {
+        path: 'nomina',
+        element: <Nomina />
+      },
+      {
+        path: 'costos-operativos',
+        element: <CostosOperativos />
+      },
+      {
+        path: 'configuracion',
+        element: <Configuracion />
       }
     ]
   },

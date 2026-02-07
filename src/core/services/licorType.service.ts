@@ -10,7 +10,7 @@ export const getLicorTypes = async () => {
     }
 }
 
-export const createLicorType = async (licorType: any) => {
+export const createLicorType = async (licorType: { nombre: string; iva: number }) => {
     try {
         const response = await api.post('/licor-type', licorType);
         return response.data;
@@ -20,8 +20,9 @@ export const createLicorType = async (licorType: any) => {
     }
 }
 
-export const updateLicorType = async (licorType: any) => {
+export const updateLicorType = async (licorType: { id: number; nombre: string; iva: number }) => {
     try {
+        console.log("licorType", licorType);
         const response = await api.put(`/licor-type/${licorType.id}`, licorType);
         return response.data;
     } catch (error) {

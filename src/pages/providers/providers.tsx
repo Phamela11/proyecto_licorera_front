@@ -21,55 +21,66 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TableGlobal, { type TableColumn } from "@/components/ui/tableGlobal";
-import useLicorTypes, { type LicorType } from "./useLicorTypes";
+import useProviders from "./useProviders";
+import type { Provider } from "./useProviders";
 
-const LicorTypes = () => {
-  const {
-    licorTypes,
-    filteredLicorTypes,
-    searchTerm,
-    setSearchTerm,
-    isModalOpen,
-    setIsModalOpen,
+const Providers = () => {
+  const { 
+    providers, 
+    filteredProviders, 
+    isModalOpen, 
     isEditMode,
+    isDeleteDialogOpen,
+    providerToDelete,
+    newProvider, 
+    setIsModalOpen, 
     openCreateModal,
     openEditModal,
-    register,
-    handleSubmitForm,
-    isDeleteDialogOpen,
-    licorTypeToDelete,
     openDeleteDialog,
-    confirmDeleteLicorType,
-    cancelDeleteLicorType,
-    onSubmit,
-  } = useLicorTypes();
+    confirmDeleteProvider,
+    cancelDeleteProvider,
+    onSubmit, 
+    searchTerm,
+    setSearchTerm,
+    register,
+    handleSubmitForm
+  } = useProviders();
 
-  const columns: TableColumn<LicorType>[] = [
+  // Configuración de columnas para TableGlobal
+  const providerColumns: TableColumn<Provider>[] = [
     {
       key: "nombre",
       title: "Nombre",
       width: "250px",
     },
     {
-      key: "iva",
-      title: "IVA (%)",
-      width: "100px",
+      key: "telefono",
+      title: "Teléfono",
       align: "center",
-      render: (iva: number) => (
-        <span className="font-medium text-blue-600">{iva}%</span>
-      ),
+      width: "150px",
+    },
+    {
+      key: "direccion",
+      title: "Dirección",
+      width: "300px",
+    },
+    {
+      key: "fecha",
+      title: "Fecha",
+      align: "center",
+      width: "120px",
     },
     {
       key: "actions",
       title: "Acciones",
       align: "right",
-      render: (_, record: LicorType) => (
+      render: (_, record: Provider) => (
         <div className="flex items-center justify-end space-x-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => openEditModal(record)}
-            title="Editar tipo de licor"
+            title="Editar proveedor"
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -78,7 +89,7 @@ const LicorTypes = () => {
             size="sm"
             onClick={() => openDeleteDialog(record)}
             className="text-red-600 hover:text-red-700"
-            title="Eliminar tipo de licor"
+            title="Eliminar proveedor"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -88,63 +99,84 @@ const LicorTypes = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6 min-h-0">
+    <div className="p-6 space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tipos de Licor</h1>
-          <p className="text-muted-foreground">Gestiona los tipos de licor</p>
+          <h1 className="text-3xl font-bold tracking-tight">Proveedores</h1>
+          <p className="text-muted-foreground">
+            Gestiona la información de proveedores
+          </p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="mr-2 h-4 w-4" />
-          Crear Tipo de Licor
+          Crear Proveedor
         </Button>
-
+        
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>
-                {isEditMode ? "Editar Tipo de Licor" : "Crear Tipo de Licor"}
+                {isEditMode ? "Editar Proveedor" : "Crear Nuevo Proveedor"}
               </DialogTitle>
               <DialogDescription>
-                {isEditMode
-                  ? "Modifica el nombre y el IVA del tipo de licor."
-                  : "Ingresa el nombre y el IVA del tipo de licor a crear."}
+                {isEditMode 
+                  ? "Modifica los datos del proveedor seleccionado."
+                  : "Completa los datos para crear un nuevo proveedor."
+                }
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="nombre">Nombre *</Label>
-                <Input id="nombre" placeholder="Ej: Ron" {...register("nombre")} />
+                <Label htmlFor="nombre">Nombre del proveedor *</Label>
+                <Input
+                  id="nombre"
+                  defaultValue={newProvider.nombre}
+                  {...register('nombre')}
+                  placeholder="Ingresa el nombre del proveedor"
+                />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="iva">IVA (%) *</Label>
-                <Input 
-                  id="iva" 
-                  type="number" 
-                  min="0" 
-                  max="100" 
-                  placeholder="Ej: 19" 
-                  {...register("iva")} 
+                <Label htmlFor="telefono">Teléfono *</Label>
+                <Input
+                  id="telefono"
+                  defaultValue={newProvider.telefono}
+                  {...register('telefono')}
+                  placeholder="Número de teléfono"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="direccion">Dirección *</Label>
+                <Input
+                  id="direccion"
+                  defaultValue={newProvider.direccion}
+                  {...register('direccion')}
+                  placeholder="Dirección completa"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsModalOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button onClick={handleSubmitForm(onSubmit)}>
-                {isEditMode ? "Actualizar" : "Crear"}
+                {isEditMode ? "Actualizar Proveedor" : "Crear Proveedor"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* Barra de búsqueda */}
       <div className="flex items-center space-x-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar tipos..."
+            placeholder="Buscar proveedores..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
@@ -152,11 +184,14 @@ const LicorTypes = () => {
         </div>
       </div>
 
+      {/* Tabla de proveedores con TableGlobal */}
       <TableGlobal
-        data={filteredLicorTypes}
-        columns={columns}
+        data={filteredProviders}
+        columns={providerColumns}
         emptyMessage={
-          searchTerm ? "No se encontraron tipos" : "No hay tipos de licor registrados"
+          searchTerm
+            ? "No se encontraron proveedores con ese criterio de búsqueda"
+            : "No hay proveedores registrados"
         }
         pagination={{
           enabled: true,
@@ -167,26 +202,30 @@ const LicorTypes = () => {
         }}
       />
 
+      {/* Resumen */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div>
-          Total: {licorTypes.length}
-          {searchTerm && ` | Filtrados: ${filteredLicorTypes.length}`}
+          Total de proveedores: {providers.length}
+          {searchTerm && ` | Filtrados: ${filteredProviders.length}`}
         </div>
       </div>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={cancelDeleteLicorType}>
+      {/* Modal de confirmación para eliminar */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={cancelDeleteProvider}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminará permanentemente el tipo
-              <strong> {licorTypeToDelete?.nombre}</strong>.
+              Esta acción no se puede deshacer. Se eliminará permanentemente el proveedor{" "}
+              <strong>{providerToDelete?.nombre}</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDeleteLicorType}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={cancelDeleteProvider}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDeleteLicorType}
+              onClick={confirmDeleteProvider}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               Eliminar
@@ -198,4 +237,4 @@ const LicorTypes = () => {
   );
 };
 
-export default LicorTypes;
+export default Providers;

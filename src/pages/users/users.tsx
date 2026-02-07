@@ -130,6 +130,14 @@ const Users = () => {
       },
     },
     {
+      key: "valor_hora",
+      title: "Valor Hora",
+      align: "center",
+      render: (valor_hora: number) => {
+        return `$${Number(valor_hora || 0).toFixed(2)}`;
+      },
+    },
+    {
       key: "fecha_creacion",
       title: "Fecha de Creación",
       align: "center",
@@ -233,6 +241,18 @@ const Users = () => {
                   <option value={2}>Empleado</option>
                   <option value={3}>Cajero</option>
                 </select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="valor_hora">Valor por Hora *</Label>
+                <Input
+                  id="valor_hora"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  defaultValue={newUser.valor_hora}
+                  {...register('valor_hora')}
+                  placeholder="0.00"
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="contrasena">
